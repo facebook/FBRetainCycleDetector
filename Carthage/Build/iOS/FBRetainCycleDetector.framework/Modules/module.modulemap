@@ -1,6 +1,0 @@
-framework module FBRetainCycleDetector {
-  umbrella header "FBRetainCycleDetector.h"
-
-  export *
-  module * { export * }
-}
