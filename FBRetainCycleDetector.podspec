@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name         = "FBRetainCycleDetector"
   s.version      = "0.1"
-  s.summary      = "It can detect all retain cycles in the app"
+  s.summary      = "Library that helps with detecting retain cycles in iOS apps"
   s.homepage     = "https://github.com/facebook/FBRetainCycleDetector"
   s.license      = "BSD"
   s.author       = { "Grzegorz Pstrucha" => "gricha@fb.com" }
