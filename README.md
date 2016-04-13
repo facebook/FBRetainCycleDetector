@@ -7,6 +7,7 @@ An iOS library that finds retain cycles using runtime analysis.
 ## About
 Retain cycles are one of the most common ways of creating memory leaks. It's incredibly easy to create a retain cycle, and tends to be hard to spot it.
 The goal of FBRetainCycleDetector is to help find retain cycles at runtime.
+The features of this project were influenced by [Circle](https://github.com/mikeash/Circle).
 
 ## Installation
 
