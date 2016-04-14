@@ -7,6 +7,7 @@ An iOS library that finds retain cycles using runtime analysis.
 ## About
 Retain cycles are one of the most common ways of creating memory leaks. It's incredibly easy to create a retain cycle, and tends to be hard to spot it.
 The goal of FBRetainCycleDetector is to help find retain cycles at runtime.
+The features of this project were influenced by [Circle](https://github.com/mikeash/Circle).
 
 ## Installation
 
@@ -43,7 +44,7 @@ NSSet *retainCycles = [detector findRetainCycles];
 NSLog(@"%@", retainCycles);
 ```
 
-`- (NSSet<NSArray<FBObjectiveCGaphElement *> *> *)findRetainCycles` will return a set of arrays of wrapped objects. It's pretty hard to look at at first, but let's go through it. Every array in this set will represent one retain cycle. Every element in this array is a wrapper around one object in this retain cycle. Check [FBObjectiveCGraphElement](https://github.com/facebook/FBRetainCycleDetector/blob/master/FBRetainCycleDetector/Graph/FBObjectiveCGraphElement.h).
+`- (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)findRetainCycles` will return a set of arrays of wrapped objects. It's pretty hard to look at at first, but let's go through it. Every array in this set will represent one retain cycle. Every element in this array is a wrapper around one object in this retain cycle. Check [FBObjectiveCGraphElement](https://github.com/facebook/FBRetainCycleDetector/blob/master/FBRetainCycleDetector/Graph/FBObjectiveCGraphElement.h).
 
 Example output could look like this:
 ```

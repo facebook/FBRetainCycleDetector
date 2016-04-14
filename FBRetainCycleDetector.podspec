@@ -1,21 +1,13 @@
-#
-#  Be sure to run `pod spec lint FBRetainCycleDetector.podspec' to ensure this is a
-#  valid spec and to remove all comments including this before submitting the spec.
-#
-#  To learn more about Podspec attributes see http://docs.cocoapods.org/specification.html
-#  To see working Podspecs in the CocoaPods repo see https://github.com/CocoaPods/Specs/
-#
-
 Pod::Spec.new do |s|
   s.name         = "FBRetainCycleDetector"
   s.version      = "0.1.1"
-  s.summary      = "It can detect all retain cycles in the app"
+  s.summary      = "Library that helps with detecting retain cycles in iOS apps"
   s.homepage     = "https://github.com/facebook/FBRetainCycleDetector"
   s.license      = "BSD"
   s.author       = { "Grzegorz Pstrucha" => "gricha@fb.com" }
   s.platform     = :ios, "8.0"
   s.source       = {
-    :git => "git@github.com:facebook/FBRetainCycleDetector.git",
+    :git => "https://github.com/facebook/FBRetainCycleDetector.git",
     :tag => "0.1"
   }
   s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,fishhook}/**/*.{h,m,mm,c}"
