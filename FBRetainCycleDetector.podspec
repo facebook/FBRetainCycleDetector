@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name         = "FBRetainCycleDetector"
-  s.version      = "0.1"
+  s.version      = "0.1.1"
   s.summary      = "It can detect all retain cycles in the app"
   s.homepage     = "https://github.com/facebook/FBRetainCycleDetector"
   s.license      = "BSD"
@@ -37,6 +37,19 @@ Pod::Spec.new do |s|
 
   s.requires_arc = files + [
     'fishhook/**/*.{c,h}'
+  ]
+  s.public_header_files = [
+    'FBRetainCycleDetector/Detector/FBRetainCycleDetector.h',
+    'FBRetainCycleDetector/Associations/FBAssociationManager.h',
+    'FBRetainCycleDetector/Graph/FBObjectiveCBlock.h',
+    'FBRetainCycleDetector/Graph/FBObjectiveCGraphElement.h',
+    'FBRetainCycleDetector/Graph/Specialization/FBObjectiveCNSCFTimer.h',
+    'FBRetainCycleDetector/Graph/FBObjectiveCObject.h',
+    'FBRetainCycleDetector/Graph/FBObjectGraphConfiguration.h',
+    'FBRetainCycleDetector/Layout/Classes/Parser/FBParsedStruct.h',
+    'FBRetainCycleDetector/Layout/Classes/Parser/FBParsedType.h',
+    'FBRetainCycleDetector/Filtering/FBStandardGraphEdgeFilters.h',
+    'FBRetainCycleDetector/Layout/Classes/Parser/FBStructEncodingParser.h',
   ]
 
   s.framework = "Foundation", "CoreGraphics", "UIKit"
