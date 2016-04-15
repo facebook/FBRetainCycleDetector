@@ -1,5 +1,5 @@
 # FBRetainCycleDetector
-[![Build Status](https://travis-ci.com/facebook/FBRetainCycleDetector.svg?token=V7h8T5yowczhx1y5QxeQ&branch=master)](https://travis-ci.com/facebook/FBRetainCycleDetector)
+[![Build Status](https://travis-ci.org/facebook/FBRetainCycleDetector.svg?branch=master)](https://travis-ci.org/facebook/FBRetainCycleDetector)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 An iOS library that finds retain cycles using runtime analysis.
