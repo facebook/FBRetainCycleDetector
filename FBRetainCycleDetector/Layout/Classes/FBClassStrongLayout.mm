@@ -10,37 +10,43 @@
 #import "FBClassStrongLayout.h"
 
 #import <math.h>
+#import <memory>
 #import <objc/runtime.h>
+#import <vector>
 
 #import <UIKit/UIKit.h>
 
 #import "FBIvarReference.h"
 #import "FBObjectInStructReference.h"
 #import "FBStructEncodingParser.h"
+#import "Struct.h"
+#import "Type.h"
 
 /**
  If we stumble upon a struct, we need to go through it and check if it doesn't retain some objects.
  */
-static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar, NSString *encoding) {
+static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar, std::string encoding) {
   NSMutableArray<FBObjectInStructReference *> *references = [NSMutableArray new];
 
-  FBParsedStruct *parsedStruct = FBParseStructEncodingWithName(encoding,
-                                                         ivar.name);
-  NSArray<FBParsedType *> *types = [parsedStruct flattenTypes];
-
+  std::string ivarName = std::string([ivar.name cStringUsingEncoding:NSUTF8StringEncoding]);
+  FB::RetainCycleDetector::Parser::Struct parsedStruct =
+  FB::RetainCycleDetector::Parser::parseStructEncodingWithName(encoding, ivarName);
+  
+  std::vector<std::shared_ptr<FB::RetainCycleDetector::Parser::Type>> types = parsedStruct.flattenTypes();
+  
   ptrdiff_t offset = ivar.offset;
-
-  for (FBParsedType *typeEncoding in types) {
+  
+  for (auto &type: types) {
     NSUInteger size, align;
 
-    if ([typeEncoding.typeEncoding hasPrefix:@"^"]) {
+    std::string typeEncoding = type->typeEncoding;
+    if (typeEncoding[0] == '^') {
       // It's a pointer, let's skip
       size = sizeof(void *);
       align = _Alignof(void *);
     } else {
       @try {
-        const char *encodingString = [typeEncoding.typeEncoding UTF8String];
-        NSGetSizeAndAlignment(encodingString,
+        NSGetSizeAndAlignment(typeEncoding.c_str(),
                               &size,
                               &align);
       } @catch (NSException *e) {
@@ -49,7 +55,7 @@ static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar,
          If we would like to support it, we would need to derive size and alignment of type from the string.
          C++ does not have reflection so we can't really do that unless we create the mapping ourselves.
          */
-        return nil;
+        break;
       }
     }
 
@@ -59,14 +65,24 @@ static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar,
     NSUInteger whatsMissing = (overAlignment == 0) ? 0 : align - overAlignment;
     offset += whatsMissing;
 
-    if ([typeEncoding.typeEncoding hasPrefix:@"@"]) {
+    if (typeEncoding[0] == '@') {
+    
       // The index that ivar layout will ask for is going to be aligned with pointer size
 
       // Prepare additional context
-      NSString *typeEncodingName = typeEncoding.name;
-      NSArray *namePath = typeEncoding.typePath;
+      NSString *typeEncodingName = [NSString stringWithCString:type->name.c_str() encoding:NSUTF8StringEncoding];
+      
+      NSMutableArray *namePath = [NSMutableArray new];
+      
+      for (auto &name: type->typePath) {
+        NSString *nameString = [NSString stringWithCString:name.c_str() encoding:NSUTF8StringEncoding];
+        if (nameString) {
+          [namePath addObject:nameString];
+        }
+      }
+      
       if (typeEncodingName) {
-        namePath = [namePath arrayByAddingObject:typeEncodingName];
+        [namePath addObject:typeEncodingName];
       }
       [references addObject:[[FBObjectInStructReference alloc] initWithIndex:(offset / sizeof(void *))
                                                                     namePath:namePath]];
@@ -89,7 +105,7 @@ NSArray<id<FBObjectReference>> *FBGetClassReferences(Class aCls) {
     FBIvarReference *wrapper = [[FBIvarReference alloc] initWithIvar:ivar];
 
     if (wrapper.type == FBStructType) {
-      NSString *encoding = @(ivar_getTypeEncoding(wrapper.ivar));
+      std::string encoding = std::string(ivar_getTypeEncoding(wrapper.ivar));
       NSArray<FBObjectInStructReference *> *references = FBGetReferencesForObjectsInStructEncoding(wrapper, encoding);
 
       [result addObjectsFromArray:references];

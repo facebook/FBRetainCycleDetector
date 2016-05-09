@@ -9,95 +9,152 @@
 
 #import "FBStructEncodingParser.h"
 
+#import <algorithm>
+#import <memory>
+#import <string>
 #import <unordered_set>
+#import <vector>
 
-/**
- Intermediate struct object used inside the algorithm to pass some
- information when parsing nested structures.
- */
-struct _StructParseResult {
-  NSArray<FBParsedType *> *containedTypes;
-  NSString *typeName;
+#import "BaseType.h"
+
+namespace {
+  class _StringScanner {
+  public:
+    std::string string;
+    size_t index;
+    
+    _StringScanner(std::string string): string(string), index(0) {}
+    
+    bool scanString(std::string stringToScan) {
+      if (!(string.compare(index, stringToScan.length(), stringToScan) == 0)) {
+        return false;
+      }
+      index += stringToScan.length();
+      return true;
+    }
+    
+    std::string scanUpToString(std::string upToString) {
+      size_t pos = string.find(upToString, index);
+      if (pos == std::string::npos) {
+        // Mark as whole string scanned
+        index = string.length();
+        return "";
+      }
+      
+      std::string inBetweenString = string.substr(index, pos - index);
+      index = pos;
+      return inBetweenString;
+    }
+    
+    char currentCharacter() {
+      return string[index];
+    }
+    
+    std::string scanUpToCharacterFromSet(std::string &characterSet) {
+      size_t pos = string.find_first_of(characterSet, index);
+      if (pos == std::string::npos) {
+        index = string.length();
+        return "";
+      }
+      
+      std::string inBetweenString = string.substr(index, pos-index);
+      index = pos;
+      return inBetweenString;
+    }
+  };
+  
 };
 
-static struct _StructParseResult _ParseStructEncodingWithScanner(NSScanner *scanner) {
-  NSMutableArray *types = [NSMutableArray new];
-
-  // Every struct starts with '{'
-  __unused BOOL scannedCorrectly = [scanner scanString:@"{" intoString:nil];
-  NSCAssert(scannedCorrectly, @"The first character of struct encoding should be {");
-
-  // Parse name
-  NSString *structTypeName = nil;
-  [scanner scanUpToString:@"=" intoString:&structTypeName];
-  [scanner scanString:@"=" intoString:nil];
-
-  NSCharacterSet *literalEndingCharacters = [NSCharacterSet characterSetWithCharactersInString:@"\"}"];
-
-  while (![scanner scanString:@"}" intoString:nil]) {
-    if ([scanner scanString:@"\"" intoString:nil]) {
-      NSString *parseResult = nil;
-      [scanner scanUpToString:@"\"" intoString:&parseResult];
-      [scanner scanString:@"\"" intoString:nil];
-      if (parseResult) {
-        [types addObject:parseResult];
-      }
-    } else if ([scanner.string characterAtIndex:scanner.scanLocation] == '{') {
-      // We do not want to consume '{' because we will call parser recursively
-      NSUInteger locBefore = [scanner scanLocation];
-      _StructParseResult parseResult = _ParseStructEncodingWithScanner(scanner);
-      NSRange typeEncodingRange = NSMakeRange(locBefore, ([scanner scanLocation] - locBefore));
-      NSString *nameFromBefore = [types lastObject];
-      [types removeLastObject];
-      FBParsedStruct *type = [[FBParsedStruct alloc] initWithName:nameFromBefore
-                                                     typeEncoding:[scanner.string substringWithRange:typeEncodingRange]
-                                                   structTypeName:parseResult.typeName
-                                           typesContainedInStruct:parseResult.containedTypes];
-      [types addObject:type];
-    } else {
-      // It's a type name (literal), let's advance until we find '"', or '}'
-      NSString *parseResult = nil;
-      [scanner scanUpToCharactersFromSet:literalEndingCharacters
-                              intoString:&parseResult];
-
-      NSString *nameFromBefore = nil;
-      if ([[types lastObject] isKindOfClass:[NSString class]]) {
-        // We have parsed some name
-        nameFromBefore = [types lastObject];
-        [types removeLastObject];
-      }
-      FBParsedType *type = [[FBParsedType alloc] initWithName:nameFromBefore
-                                                 typeEncoding:parseResult];
-      [types addObject:type];
-    }
-  }
-
-  NSPredicate *filterPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject,
-                                                                       NSDictionary<NSString *, id> *bindings) {
-    if ([evaluatedObject isKindOfClass:[FBParsedType class]] ||
-        [evaluatedObject isKindOfClass:[FBParsedStruct class]]) {
-      return YES;
-    }
-    return NO;
-  }];
-  NSArray<FBParsedType *> *finalTypes = [types filteredArrayUsingPredicate:filterPredicate];
-
-  return {
-    .containedTypes = finalTypes,
-    .typeName = structTypeName,
+namespace FB { namespace RetainCycleDetector { namespace Parser {
+  
+  /**
+   Intermediate struct object used inside the algorithm to pass some
+   information when parsing nested structures.
+   */
+  struct _StructParseResult {
+    std::vector<std::shared_ptr<Type>> containedTypes;
+    std::string typeName;
   };
-}
-
-FBParsedStruct *FBParseStructEncoding(NSString *structEncodingString) {
-  return FBParseStructEncodingWithName(structEncodingString, nil);
-}
-
-FBParsedStruct *FBParseStructEncodingWithName(NSString *structEncodingString, NSString *structName) {
-  struct _StructParseResult result = _ParseStructEncodingWithScanner([NSScanner scannerWithString:structEncodingString]);
-  FBParsedStruct *outerStruct = [[FBParsedStruct alloc] initWithName:structName
-                                                        typeEncoding:structEncodingString
-                                                      structTypeName:result.typeName
-                                              typesContainedInStruct:result.containedTypes];
-  [outerStruct passTypePath:nil];
-  return outerStruct;
-}
+  
+  static struct _StructParseResult _ParseStructEncodingWithScanner(_StringScanner &scanner) {
+    std::vector<std::shared_ptr<BaseType>> types;
+    
+    // Every struct starts with '{'
+    __unused bool scannedCorrectly = scanner.scanString("{");
+    NSCAssert(scannedCorrectly, @"The first character of struct encoding should be {");
+    
+    // Parse name
+    std::string structTypeName = scanner.scanUpToString("=");
+    scanner.scanString("=");
+    
+    std::string literalEndingCharacters = "\"}";
+    
+    while (!(scanner.scanString("}"))) {
+      if (scanner.scanString("\"")) {
+        std::string parseResult = scanner.scanUpToString("\"");
+        scanner.scanString("\"");
+        if (parseResult.length() > 0) {
+          types.emplace_back(std::shared_ptr<Unresolved>(new Unresolved(parseResult)));
+        }
+      } else if (scanner.currentCharacter() == '{') {
+        // We do not want to consume '{' because we will call parser recursively
+        size_t locBefore = scanner.index;
+        _StructParseResult parseResult = _ParseStructEncodingWithScanner(scanner);
+        
+        std::shared_ptr<Unresolved> nameFromBefore = std::dynamic_pointer_cast<Unresolved>(types.back());
+        NSCAssert(nameFromBefore, @"There should always be a name from before if we hit a struct");
+        types.pop_back();
+        std::shared_ptr<Struct> type (new Struct(nameFromBefore->value,
+                                                 scanner.string.substr(locBefore, (scanner.index - locBefore)),
+                                                 parseResult.typeName,
+                                                 parseResult.containedTypes));
+        
+        types.emplace_back(type);
+      } else {
+        // It's a type name (literal), let's advance until we find '"', or '}'
+        std::string parseResult = scanner.scanUpToCharacterFromSet(literalEndingCharacters);
+        
+        std::string nameFromBefore = "";
+        if (types.size() > 0) {
+          if (std::shared_ptr<Unresolved> maybeUnresolved = std::dynamic_pointer_cast<Unresolved>(types.back())) {
+            nameFromBefore = maybeUnresolved->value;
+            types.pop_back();
+          }
+        }
+        std::shared_ptr<Type> type(new Type(nameFromBefore,
+                                            parseResult));
+        types.emplace_back(type);
+      }
+    }
+    
+    std::vector<std::shared_ptr<Type>> filteredVector;
+    
+    for (auto &t: types) {
+      if (std::shared_ptr<Type> convertedType = std::dynamic_pointer_cast<Type>(t)) {
+        filteredVector.emplace_back(convertedType);
+      }
+    }
+    
+    return {
+      .containedTypes = filteredVector,
+      .typeName = structTypeName,
+    };
+  }
+  
+  Struct parseStructEncoding(std::string structEncodingString) {
+    return parseStructEncodingWithName(structEncodingString, "");
+  }
+  
+  Struct parseStructEncodingWithName(std::string structEncodingString,
+                                     std::string structName) {
+    _StringScanner scanner = _StringScanner(structEncodingString);
+    struct _StructParseResult result = _ParseStructEncodingWithScanner(scanner);
+    
+    Struct outerStruct = Struct(structName,
+                                structEncodingString,
+                                result.typeName,
+                                result.containedTypes);
+    outerStruct.passTypePath({});
+    return outerStruct;
+  }
+} } }
