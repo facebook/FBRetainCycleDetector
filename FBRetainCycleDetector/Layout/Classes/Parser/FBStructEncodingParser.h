@@ -22,7 +22,7 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
    It will not work with encodings provided by @encode() because they do not add names.
    It will work with encodings provided by ivars (ivar_getTypeEncoding)
    */
-  Struct parseStructEncoding(std::string structEncodingString);
+  Struct parseStructEncoding(const std::string &structEncodingString);
   
   
   /**
@@ -30,8 +30,8 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
    in typePath (check out FBParsedType for details).
    The name here can be for example a name of an ivar with this struct.
    */
-  Struct parseStructEncodingWithName(std::string structEncodingString,
-                                     std::string structName);
+  Struct parseStructEncodingWithName(const std::string &structEncodingString,
+                                     const std::string &structName);
   
   
 } } }

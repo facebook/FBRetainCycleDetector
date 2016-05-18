@@ -21,8 +21,8 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
     const std::string name;
     const std::string typeEncoding;
     
-    Type(std::string name,
-         std::string typeEncoding): name(name), typeEncoding(typeEncoding) {}
+    Type(const std::string &name,
+         const std::string &typeEncoding): name(name), typeEncoding(typeEncoding) {}
     Type(Type&&) = default;
     Type &operator=(Type&&) = default;
     

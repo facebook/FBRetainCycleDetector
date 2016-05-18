@@ -20,12 +20,12 @@
 namespace {
   class _StringScanner {
   public:
-    std::string string;
+    const std::string string;
     size_t index;
     
-    _StringScanner(std::string string): string(string), index(0) {}
+    _StringScanner(const std::string &string): string(string), index(0) {}
     
-    bool scanString(std::string stringToScan) {
+    bool scanString(const std::string &stringToScan) {
       if (!(string.compare(index, stringToScan.length(), stringToScan) == 0)) {
         return false;
       }
@@ -33,7 +33,7 @@ namespace {
       return true;
     }
     
-    std::string scanUpToString(std::string upToString) {
+    const std::string scanUpToString(const std::string &upToString) {
       size_t pos = string.find(upToString, index);
       if (pos == std::string::npos) {
         // Mark as whole string scanned
@@ -46,11 +46,11 @@ namespace {
       return inBetweenString;
     }
     
-    char currentCharacter() {
+    const char currentCharacter() {
       return string[index];
     }
     
-    std::string scanUpToCharacterFromSet(std::string &characterSet) {
+    const std::string scanUpToCharacterFromSet(const std::string &characterSet) {
       size_t pos = string.find_first_of(characterSet, index);
       if (pos == std::string::npos) {
         index = string.length();
@@ -73,47 +73,49 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
    */
   struct _StructParseResult {
     std::vector<std::shared_ptr<Type>> containedTypes;
-    std::string typeName;
+    const std::string typeName;
   };
+  
+  static const auto kOpenStruct = "{";
+  static const auto kCloseStruct = "}";
+  static const auto kLiteralEndingCharacters = "\"}";
+  static const auto kQuote = "\"";
   
   static struct _StructParseResult _ParseStructEncodingWithScanner(_StringScanner &scanner) {
     std::vector<std::shared_ptr<BaseType>> types;
     
     // Every struct starts with '{'
-    __unused bool scannedCorrectly = scanner.scanString("{");
+    __unused const auto scannedCorrectly = scanner.scanString(kOpenStruct);
     NSCAssert(scannedCorrectly, @"The first character of struct encoding should be {");
     
     // Parse name
-    std::string structTypeName = scanner.scanUpToString("=");
+    const auto structTypeName = scanner.scanUpToString("=");
     scanner.scanString("=");
     
-    std::string literalEndingCharacters = "\"}";
-    
-    while (!(scanner.scanString("}"))) {
-      if (scanner.scanString("\"")) {
-        std::string parseResult = scanner.scanUpToString("\"");
-        scanner.scanString("\"");
+    while (!(scanner.scanString(kCloseStruct))) {
+      if (scanner.scanString(kQuote)) {
+        const auto parseResult = scanner.scanUpToString(kQuote);
+        scanner.scanString(kQuote);
         if (parseResult.length() > 0) {
-          types.emplace_back(std::shared_ptr<Unresolved>(new Unresolved(parseResult)));
+          types.push_back(std::make_shared<Unresolved>(parseResult));
         }
       } else if (scanner.currentCharacter() == '{') {
         // We do not want to consume '{' because we will call parser recursively
-        size_t locBefore = scanner.index;
-        _StructParseResult parseResult = _ParseStructEncodingWithScanner(scanner);
+        const auto locBefore = scanner.index;
+        auto parseResult = _ParseStructEncodingWithScanner(scanner);
         
-        std::shared_ptr<Unresolved> nameFromBefore = std::dynamic_pointer_cast<Unresolved>(types.back());
+        const auto nameFromBefore = std::dynamic_pointer_cast<Unresolved>(types.back());
         NSCAssert(nameFromBefore, @"There should always be a name from before if we hit a struct");
         types.pop_back();
-        std::shared_ptr<Struct> type (new Struct(nameFromBefore->value,
-                                                 scanner.string.substr(locBefore, (scanner.index - locBefore)),
-                                                 parseResult.typeName,
-                                                 parseResult.containedTypes));
+        std::shared_ptr<Struct> type = std::make_shared<Struct>(nameFromBefore->value,
+                                                                scanner.string.substr(locBefore, (scanner.index - locBefore)),
+                                                                parseResult.typeName,
+                                                                std::move(parseResult.containedTypes));
         
         types.emplace_back(type);
       } else {
         // It's a type name (literal), let's advance until we find '"', or '}'
-        std::string parseResult = scanner.scanUpToCharacterFromSet(literalEndingCharacters);
-        
+        const auto parseResult = scanner.scanUpToCharacterFromSet(kLiteralEndingCharacters);
         std::string nameFromBefore = "";
         if (types.size() > 0) {
           if (std::shared_ptr<Unresolved> maybeUnresolved = std::dynamic_pointer_cast<Unresolved>(types.back())) {
@@ -121,16 +123,15 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
             types.pop_back();
           }
         }
-        std::shared_ptr<Type> type(new Type(nameFromBefore,
-                                            parseResult));
+        std::shared_ptr<Type> type = std::make_shared<Type>(nameFromBefore, parseResult);
         types.emplace_back(type);
       }
     }
     
     std::vector<std::shared_ptr<Type>> filteredVector;
     
-    for (auto &t: types) {
-      if (std::shared_ptr<Type> convertedType = std::dynamic_pointer_cast<Type>(t)) {
+    for (const auto &t: types) {
+      if (const auto convertedType = std::dynamic_pointer_cast<Type>(t)) {
         filteredVector.emplace_back(convertedType);
       }
     }
@@ -141,19 +142,19 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
     };
   }
   
-  Struct parseStructEncoding(std::string structEncodingString) {
+  Struct parseStructEncoding(const std::string &structEncodingString) {
     return parseStructEncodingWithName(structEncodingString, "");
   }
   
-  Struct parseStructEncodingWithName(std::string structEncodingString,
-                                     std::string structName) {
+  Struct parseStructEncodingWithName(const std::string &structEncodingString,
+                                     const std::string &structName) {
     _StringScanner scanner = _StringScanner(structEncodingString);
-    struct _StructParseResult result = _ParseStructEncodingWithScanner(scanner);
+    auto result = _ParseStructEncodingWithScanner(scanner);
     
     Struct outerStruct = Struct(structName,
                                 structEncodingString,
                                 result.typeName,
-                                result.containedTypes);
+                                std::move(result.containedTypes));
     outerStruct.passTypePath({});
     return outerStruct;
   }

@@ -30,8 +30,8 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
   std::vector<std::shared_ptr<Type>> Struct::flattenTypes() {
     std::vector<std::shared_ptr<Type>> flattenedTypes;
     
-    for (auto &type:typesContainedInStruct) {
-      std::shared_ptr<Struct> maybeStruct = std::dynamic_pointer_cast<Struct>(type);
+    for (const auto &type:typesContainedInStruct) {
+      const auto maybeStruct = std::dynamic_pointer_cast<Struct>(type);
       if (maybeStruct) {
         // Complex type, recursively grab all references
         flattenedTypes.reserve(flattenedTypes.size() + std::distance(maybeStruct->typesContainedInStruct.begin(),
