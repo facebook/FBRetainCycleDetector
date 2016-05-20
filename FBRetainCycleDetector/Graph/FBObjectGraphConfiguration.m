@@ -13,10 +13,14 @@
 
 - (instancetype)initWithFilterBlocks:(NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                  shouldInspectTimers:(BOOL)shouldInspectTimers
+                   shouldCacheLayout:(BOOL)shouldCacheLayout
 {
   if (self = [super init]) {
     _filterBlocks = [filterBlocks copy];
     _shouldInspectTimers = shouldInspectTimers;
+    if (shouldCacheLayout) {
+      _layoutCache = [NSMutableDictionary new];
+    }
   }
   
   return self;
@@ -26,7 +30,8 @@
 {
   // By default we are inspecting timers
   return [self initWithFilterBlocks:@[]
-                shouldInspectTimers:YES];
+                shouldInspectTimers:YES
+                  shouldCacheLayout:YES];
 }
 
 @end

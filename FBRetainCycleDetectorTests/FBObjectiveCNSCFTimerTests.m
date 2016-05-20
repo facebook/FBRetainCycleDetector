@@ -60,7 +60,8 @@
 
   FBObjectGraphConfiguration *configuration =
   [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:@[]
-                                       shouldInspectTimers:NO];
+                                       shouldInspectTimers:NO
+                                         shouldCacheLayout:NO];
   
   FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfiguration:configuration];
   

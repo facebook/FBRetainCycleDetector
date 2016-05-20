@@ -16,6 +16,8 @@ typedef NS_ENUM(NSUInteger, FBGraphEdgeType) {
   FBGraphEdgeInvalid,
 };
 
+@protocol FBObjectReference;
+
 /**
  Every filter has to be of type FBGraphEdgeFilterBlock. Filter, given two object graph elements, it should decide,
  whether a reference between them should be filtered out or not.
@@ -49,7 +51,14 @@ typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nul
  */
 @property (nonatomic, readonly) BOOL shouldInspectTimers;
 
+/**
+ Will cache layout
+ */
+@property (nonatomic, readonly, nullable) NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache;
+@property (nonatomic, readonly) BOOL shouldCacheLayouts;
+
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
-                         shouldInspectTimers:(BOOL)shouldInspectTimers NS_DESIGNATED_INITIALIZER;
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                           shouldCacheLayout:(BOOL)shouldCacheLayout NS_DESIGNATED_INITIALIZER;
 
 @end

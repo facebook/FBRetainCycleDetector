@@ -52,7 +52,8 @@
                                                                 @"_filtered")];
   FBObjectGraphConfiguration *configuration =
   [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:filterBlocks
-                                               shouldInspectTimers:YES];
+                                               shouldInspectTimers:YES
+                                         shouldCacheLayout:NO];
 
   FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfiguration:configuration];
   
@@ -73,7 +74,8 @@
                                                                 @"_filtered")];
   FBObjectGraphConfiguration *configuration =
   [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:filterBlocks
-                                               shouldInspectTimers:YES];
+                                               shouldInspectTimers:YES
+                                         shouldCacheLayout:NO];
 
   FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfiguration:configuration];
   
@@ -97,7 +99,8 @@
   
   FBObjectGraphConfiguration *configuration =
   [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:filterBlocks
-                                               shouldInspectTimers:YES];
+                                       shouldInspectTimers:YES
+                                         shouldCacheLayout:NO];
 
   FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfiguration:configuration];
 
