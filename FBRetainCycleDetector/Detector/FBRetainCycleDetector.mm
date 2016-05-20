@@ -40,8 +40,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
 {
   return [self initWithConfiguration:
           [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:FBGetStandardGraphEdgeFilters()
-                                               shouldInspectTimers:YES
-                                                 shouldCacheLayout:YES]];
+                                               shouldInspectTimers:YES]];
 }
 
 - (void)addCandidate:(id)candidate

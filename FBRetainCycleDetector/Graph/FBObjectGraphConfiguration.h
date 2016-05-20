@@ -58,7 +58,6 @@ typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nul
 @property (nonatomic, readonly) BOOL shouldCacheLayouts;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
-                         shouldInspectTimers:(BOOL)shouldInspectTimers
-                           shouldCacheLayout:(BOOL)shouldCacheLayout NS_DESIGNATED_INITIALIZER;
+                         shouldInspectTimers:(BOOL)shouldInspectTimers NS_DESIGNATED_INITIALIZER;
 
 @end
