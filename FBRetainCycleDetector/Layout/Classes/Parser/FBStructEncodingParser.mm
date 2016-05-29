@@ -110,7 +110,7 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
         std::shared_ptr<Struct> type = std::make_shared<Struct>(nameFromBefore->value,
                                                                 scanner.string.substr(locBefore, (scanner.index - locBefore)),
                                                                 parseResult.typeName,
-                                                                std::move(parseResult.containedTypes));
+                                                                parseResult.containedTypes);
         
         types.emplace_back(type);
       } else {
@@ -154,7 +154,7 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
     Struct outerStruct = Struct(structName,
                                 structEncodingString,
                                 result.typeName,
-                                std::move(result.containedTypes));
+                                result.containedTypes);
     outerStruct.passTypePath({});
     return outerStruct;
   }

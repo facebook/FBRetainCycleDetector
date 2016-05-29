@@ -23,10 +23,10 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
     Struct(const std::string &name,
            const std::string &typeEncoding,
            const std::string &structTypeName,
-           std::vector<std::shared_ptr<Type>> &&typesContainedInStruct)
+           std::vector<std::shared_ptr<Type>> &typesContainedInStruct)
     : Type(name, typeEncoding),
       structTypeName(structTypeName),
-      typesContainedInStruct(typesContainedInStruct) {};
+    typesContainedInStruct(std::move(typesContainedInStruct)) {};
     Struct(Struct&&) = default;
     Struct &operator=(Struct&&) = default;
     
