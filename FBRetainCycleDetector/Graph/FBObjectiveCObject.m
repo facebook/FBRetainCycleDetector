@@ -12,6 +12,7 @@
 #import <objc/runtime.h>
 
 #import "FBClassStrongLayout.h"
+#import "FBObjectGraphConfiguration.h"
 #import "FBObjectReference.h"
 #import "FBRetainCycleUtils.h"
 
@@ -30,7 +31,7 @@
     return nil;
   }
 
-  NSArray *strongIvars = FBGetObjectStrongReferences(self.object);
+  NSArray *strongIvars = FBGetObjectStrongReferences(self.object, self.configuration.layoutCache);
 
   NSMutableArray *retainedObjects = [[[super allRetainedObjects] allObjects] mutableCopy];
 
