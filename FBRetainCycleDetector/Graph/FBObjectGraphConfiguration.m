@@ -17,6 +17,7 @@
   if (self = [super init]) {
     _filterBlocks = [filterBlocks copy];
     _shouldInspectTimers = shouldInspectTimers;
+    _layoutCache = [NSMutableDictionary new];
   }
   
   return self;

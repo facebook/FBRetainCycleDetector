@@ -166,14 +166,26 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(Class aCls)
   return filteredIvars;
 }
 
-NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj) {
+NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
+                                                            NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;
   __unsafe_unretained Class currentClass = object_getClass(obj);
 
   while (previousClass != currentClass) {
-    NSArray<id<FBObjectReference>> *ivars = FBGetStrongReferencesForClass(currentClass);
+    NSArray<id<FBObjectReference>> *ivars;
+    
+    if (layoutCache && currentClass) {
+      ivars = layoutCache[currentClass];
+    }
+    
+    if (!ivars) {
+      ivars = FBGetStrongReferencesForClass(currentClass);
+      if (layoutCache && currentClass) {
+        layoutCache[(id<NSCopying>)currentClass] = ivars;
+      }
+    }
     [array addObjectsFromArray:ivars];
 
     previousClass = currentClass;
