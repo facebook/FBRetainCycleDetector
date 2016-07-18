@@ -24,7 +24,8 @@ typedef NS_ENUM(NSUInteger, FBGraphEdgeType) {
  @see FBGetStandardGraphEdgeFilters()
  */
 typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nullable fromObject,
-                                                  FBObjectiveCGraphElement *_Nullable toObject);
+                                                  NSString *_Nullable byIvar,
+                                                  Class _Nullable toObjectOfClass);
 
 /**
  FBObjectGraphConfiguration represents a configuration for object graph walking.

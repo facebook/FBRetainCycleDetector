@@ -43,10 +43,16 @@ typedef struct {
   if (context.info && context.retain) {
     _FBNSCFTimerInfoStruct infoStruct = *(_FBNSCFTimerInfoStruct *)(context.info);
     if (infoStruct.target) {
-      [retained addObject:FBWrapObjectGraphElementWithContext(infoStruct.target, self.configuration, @[@"target"])];
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self, infoStruct.target, self.configuration, @[@"target"]);
+      if (element) {
+        [retained addObject:element];
+      }
     }
     if (infoStruct.userInfo) {
-      [retained addObject:FBWrapObjectGraphElementWithContext(infoStruct.userInfo, self.configuration, @[@"userInfo"])];
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self, infoStruct.userInfo, self.configuration, @[@"userInfo"]);
+      if (element) {
+        [retained addObject:element];
+      }
     }
   }
 

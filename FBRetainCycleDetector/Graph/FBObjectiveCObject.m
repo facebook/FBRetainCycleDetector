@@ -20,12 +20,6 @@
 
 - (NSSet *)allRetainedObjects
 {
-  NSArray *unfiltered = [self _unfilteredRetainedObjects];
-  return [self filterObjects:unfiltered];
-}
-
-- (NSArray *)_unfilteredRetainedObjects
-{
   Class aCls = object_getClass(self.object);
   if (!self.object || !aCls) {
     return nil;
@@ -40,9 +34,13 @@
 
     if (referencedObject) {
       NSArray<NSString *> *namePath = [ref namePath];
-      [retainedObjects addObject:FBWrapObjectGraphElementWithContext(referencedObject,
-                                                                     self.configuration,
-                                                                     namePath)];
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self,
+                                                                              referencedObject,
+                                                                              self.configuration,
+                                                                              namePath);
+      if (element) {
+        [retainedObjects addObject:element];
+      }
     }
   }
 
@@ -52,7 +50,7 @@
      will hold only Objective-C objects. We are not able to check in runtime what callbacks it uses to
      retain/release (if any) and we could easily crash here.
      */
-    return retainedObjects;
+    return [NSSet setWithArray:retainedObjects];
   }
 
   if (class_isMetaClass(aCls)) {
@@ -82,11 +80,18 @@
       @try {
         for (id subobject in self.object) {
           if (retainsKeys) {
-            [temporaryRetainedObjects addObject:FBWrapObjectGraphElement(subobject, self.configuration)];
+            FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self, subobject, self.configuration);
+            if (element) {
+              [temporaryRetainedObjects addObject:element];
+            }
           }
           if (isKeyValued && retainsValues) {
-            [temporaryRetainedObjects addObject:FBWrapObjectGraphElement([self.object objectForKey:subobject],
-                                                                         self.configuration)];
+            FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self,
+                                                                         [self.object objectForKey:subobject],
+                                                                         self.configuration);
+            if (element) {
+              [temporaryRetainedObjects addObject:element];
+            }
           }
         }
       }
@@ -101,7 +106,7 @@
     }
   }
 
-  return retainedObjects;
+  return [NSSet setWithArray:retainedObjects];
 }
 
 - (BOOL)_objectRetainsEnumerableValues

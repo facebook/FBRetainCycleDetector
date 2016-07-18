@@ -45,8 +45,10 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
 
 - (void)addCandidate:(id)candidate
 {
-  FBObjectiveCGraphElement *graphElement = FBWrapObjectGraphElement(candidate, _configuration);
-  [_candidates addObject:graphElement];
+  FBObjectiveCGraphElement *graphElement = FBWrapObjectGraphElement(nil, candidate, _configuration);
+  if (graphElement) {
+    [_candidates addObject:graphElement];
+  }
 }
 
 - (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)findRetainCycles

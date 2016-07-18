@@ -19,9 +19,27 @@
 #import "FBObjectiveCObject.h"
 #import "FBObjectGraphConfiguration.h"
 
-FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(id object,
+static BOOL _ShouldBreakGraphEdge(FBObjectGraphConfiguration *configuration,
+                                  FBObjectiveCGraphElement *fromObject,
+                                  NSString *byIvar,
+                                  Class toObjectOfClass) {
+  for (FBGraphEdgeFilterBlock filterBlock in configuration.filterBlocks) {
+    if (filterBlock(fromObject, byIvar, toObjectOfClass) == FBGraphEdgeInvalid) {
+      return YES;
+    }
+  }
+
+  return NO;
+}
+
+FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(FBObjectiveCGraphElement *sourceElement,
+                                                              id object,
                                                               FBObjectGraphConfiguration *configuration,
                                                               NSArray<NSString *> *namePath) {
+  if (_ShouldBreakGraphEdge(configuration, sourceElement, [namePath firstObject], object_getClass(object))) {
+    return nil;
+  }
+  
   if (FBObjectIsBlock((__bridge void *)object)) {
     return [[FBObjectiveCBlock alloc] initWithObject:object
                                       configuration:configuration
@@ -40,7 +58,8 @@ FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(id object,
   }
 }
 
-FBObjectiveCGraphElement *FBWrapObjectGraphElement(id object,
+FBObjectiveCGraphElement *FBWrapObjectGraphElement(FBObjectiveCGraphElement *sourceElement,
+                                                   id object,
                                                    FBObjectGraphConfiguration *configuration) {
-  return FBWrapObjectGraphElementWithContext(object, configuration, nil);
+  return FBWrapObjectGraphElementWithContext(sourceElement, object, configuration, nil);
 }
