@@ -20,10 +20,12 @@ extern "C" {
  Wrapper functions, for given object they will categorize it and create proper Graph Element subclass instance
  for it.
  */
-FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(id object,
+FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(FBObjectiveCGraphElement *sourceElement,
+                                                              id object,
                                                               FBObjectGraphConfiguration *configuration,
                                                               NSArray<NSString *> *namePath);
-FBObjectiveCGraphElement *FBWrapObjectGraphElement(id object,
+FBObjectiveCGraphElement *FBWrapObjectGraphElement(FBObjectiveCGraphElement *sourceElement,
+                                                   id object,
                                                    FBObjectGraphConfiguration *configuration);
 
 #ifdef __cplusplus

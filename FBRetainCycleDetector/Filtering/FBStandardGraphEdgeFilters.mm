@@ -23,12 +23,12 @@ FBGraphEdgeFilterBlock FBFilterBlockWithObjectIvarRelation(Class aCls, NSString 
 FBGraphEdgeFilterBlock FBFilterBlockWithObjectToManyIvarsRelation(Class aCls,
                                                                   NSSet<NSString *> *ivarNames) {
   return ^(FBObjectiveCGraphElement *fromObject,
-           FBObjectiveCGraphElement *toObject){
+           NSString *byIvar,
+           Class toObjectOfClass){
     if (aCls &&
         [[fromObject objectClass] isSubclassOfClass:aCls]) {
       // If graph element holds metadata about an ivar, it will be held in the name path, as early as possible
-      NSString *ivarName = [[toObject namePath] objectAtIndex:0];
-      if ([ivarNames containsObject:ivarName]) {
+      if ([ivarNames containsObject:byIvar]) {
         return FBGraphEdgeInvalid;
       }
     }
@@ -38,10 +38,11 @@ FBGraphEdgeFilterBlock FBFilterBlockWithObjectToManyIvarsRelation(Class aCls,
 
 FBGraphEdgeFilterBlock FBFilterBlockWithObjectIvarObjectRelation(Class fromClass, NSString *ivarName, Class toClass) {
   return ^(FBObjectiveCGraphElement *fromObject,
-           FBObjectiveCGraphElement *toObject) {
+           NSString *byIvar,
+           Class toObjectOfClass) {
     if (toClass &&
-        [[toObject objectClass] isSubclassOfClass:toClass]) {
-      return FBFilterBlockWithObjectIvarRelation(fromClass, ivarName)(fromObject, toObject);
+        [toObjectOfClass isSubclassOfClass:toClass]) {
+      return FBFilterBlockWithObjectIvarRelation(fromClass, ivarName)(fromObject, byIvar, toObjectOfClass);
     }
     return FBGraphEdgeValid;
   };

@@ -45,6 +45,7 @@
     // https://github.com/bavarious/objc4/blob/3f282b8dbc0d1e501f97e4ed547a4a99cb3ac10b/runtime/objc-weak.mm#L369
 
     Class aCls = object_getClass(object);
+
     BOOL (*allowsWeakReference)(id, SEL) =
     (__typeof__(allowsWeakReference))class_getMethodImplementation(aCls, @selector(allowsWeakReference));
 
@@ -70,38 +71,16 @@
   NSMutableSet *retainedObjects = [NSMutableSet new];
 
   for (id obj in retainedObjectsNotWrapped) {
-    [retainedObjects addObject:FBWrapObjectGraphElementWithContext(obj,
-                                                                   _configuration,
-                                                                   @[@"__associated_object"])];
+    FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self,
+                                                                            obj,
+                                                                            _configuration,
+                                                                            @[@"__associated_object"]);
+    if (element) {
+      [retainedObjects addObject:element];
+    }
   }
 
   return retainedObjects;
-}
-
-- (NSSet *)filterObjects:(NSArray *)objects
-{
-  NSMutableSet *filtered = [NSMutableSet new];
-
-  for (FBObjectiveCGraphElement *reference in objects) {
-    if (![self _shouldBreakGraphEdgeFromObject:self
-                                      toObject:reference]) {
-      [filtered addObject:reference];
-    }
-  }
-
-  return filtered;
-}
-
-- (BOOL)_shouldBreakGraphEdgeFromObject:(FBObjectiveCGraphElement *)fromObject
-                               toObject:(FBObjectiveCGraphElement *)toObject
-{
-  for (FBGraphEdgeFilterBlock filterBlock in _configuration.filterBlocks) {
-    if (filterBlock(fromObject, toObject) == FBGraphEdgeInvalid) {
-      return YES;
-    }
-  }
-
-  return NO;
 }
 
 - (BOOL)isEqual:(id)object

@@ -19,12 +19,6 @@
 
 - (NSSet *)allRetainedObjects
 {
-  NSArray *unfiltered = [self _unfilteredRetainedObjects];
-  return [self filterObjects:unfiltered];
-}
-
-- (NSArray *)_unfilteredRetainedObjects
-{
   NSMutableArray *results = [[[super allRetainedObjects] allObjects] mutableCopy];
 
   // Grab a strong reference to the object, otherwise it can crash while doing
@@ -35,10 +29,13 @@
   NSArray *allRetainedReferences = FBGetBlockStrongReferences(blockObjectReference);
 
   for (id object in allRetainedReferences) {
-    [results addObject:FBWrapObjectGraphElement(object, self.configuration)];
+    FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self, object, self.configuration);
+    if (element) {
+      [results addObject:element];
+    }
   }
 
-  return results;
+  return [NSSet setWithArray:results];
 }
 
 @end

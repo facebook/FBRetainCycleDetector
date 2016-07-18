@@ -49,14 +49,6 @@
 - (nullable NSSet *)allRetainedObjects;
 
 /**
- Filter objects using filter provider.
- 
- @param objects Objects to be filtered that are references from this object
- @return NSSet of filtered objects
- */
-- (nonnull NSSet *)filterObjects:(nullable NSArray *)objects;
-
-/**
  @return address of the object represented by this element
  */
 - (size_t)objectAddress;
