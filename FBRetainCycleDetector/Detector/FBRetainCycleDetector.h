@@ -21,10 +21,7 @@ FOUNDATION_EXPORT const unsigned char FBRetainCycleDetectorVersionString[];
 #import "FBObjectiveCNSCFTimer.h"
 #import "FBObjectiveCObject.h"
 #import "FBObjectGraphConfiguration.h"
-#import "FBParsedStruct.h"
-#import "FBParsedType.h"
 #import "FBStandardGraphEdgeFilters.h"
-#import "FBStructEncodingParser.h"
 
 /**
  Retain Cycle Detector is enabled by default in DEBUG builds, but you can also force it in other builds by

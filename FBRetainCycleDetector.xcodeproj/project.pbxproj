@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		75069AAE1CD6AEF9001AFCEE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75069AAD1CD6AEF9001AFCEE /* UIKit.framework */; };
+		750866201CD6E387007CD157 /* BaseType.h in Headers */ = {isa = PBXBuildFile; fileRef = 7508661F1CD6E387007CD157 /* BaseType.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BDB3771C80E64100FD53A9 /* FBObjectGraphConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75BDB3781C80E64100FD53A9 /* FBObjectGraphConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BDB3761C80E64100FD53A9 /* FBObjectGraphConfiguration.m */; };
 		75BF0E2C1C5ADCA200E0DAB6 /* FBRetainCycleDetector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75BF0E181C5ADBCC00E0DAB6 /* FBRetainCycleDetector.framework */; };
@@ -25,7 +27,7 @@
 		75BF0E7C1C5ADD3100E0DAB6 /* FBObjectiveCBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E481C5ADD3100E0DAB6 /* FBObjectiveCBlock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75BF0E7D1C5ADD3100E0DAB6 /* FBObjectiveCBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E491C5ADD3100E0DAB6 /* FBObjectiveCBlock.m */; };
 		75BF0E7E1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E4A1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		75BF0E7F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.m */; };
+		75BF0E7F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm */; };
 		75BF0E801C5ADD3100E0DAB6 /* FBObjectiveCObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E4C1C5ADD3100E0DAB6 /* FBObjectiveCObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75BF0E811C5ADD3100E0DAB6 /* FBObjectiveCObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E4D1C5ADD3100E0DAB6 /* FBObjectiveCObject.m */; };
 		75BF0E821C5ADD3100E0DAB6 /* FBObjectiveCGraphElement+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E4F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement+Internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -38,14 +40,13 @@
 		75BF0E891C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E591C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E8A1C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E5A1C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		75BF0E8B1C5ADD3100E0DAB6 /* FBClassStrongLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E5C1C5ADD3100E0DAB6 /* FBClassStrongLayout.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.m */; };
+		75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm */; };
 		75BF0E8D1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E5E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E8E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E5F1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		75BF0E8F1C5ADD3100E0DAB6 /* FBParsedStruct.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E611C5ADD3100E0DAB6 /* FBParsedStruct.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		75BF0E901C5ADD3100E0DAB6 /* FBParsedStruct.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E621C5ADD3100E0DAB6 /* FBParsedStruct.m */; };
-		75BF0E911C5ADD3100E0DAB6 /* FBParsedType.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E631C5ADD3100E0DAB6 /* FBParsedType.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		75BF0E921C5ADD3100E0DAB6 /* FBParsedType.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E641C5ADD3100E0DAB6 /* FBParsedType.m */; };
-		75BF0E931C5ADD3100E0DAB6 /* FBStructEncodingParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E651C5ADD3100E0DAB6 /* FBStructEncodingParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		75BF0E8F1C5ADD3100E0DAB6 /* Struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E611C5ADD3100E0DAB6 /* Struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		75BF0E901C5ADD3100E0DAB6 /* Struct.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E621C5ADD3100E0DAB6 /* Struct.mm */; };
+		75BF0E911C5ADD3100E0DAB6 /* Type.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E631C5ADD3100E0DAB6 /* Type.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		75BF0E931C5ADD3100E0DAB6 /* FBStructEncodingParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E651C5ADD3100E0DAB6 /* FBStructEncodingParser.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E941C5ADD3100E0DAB6 /* FBStructEncodingParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E661C5ADD3100E0DAB6 /* FBStructEncodingParser.mm */; };
 		75BF0E951C5ADD3100E0DAB6 /* FBIvarReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E681C5ADD3100E0DAB6 /* FBIvarReference.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E961C5ADD3100E0DAB6 /* FBIvarReference.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E691C5ADD3100E0DAB6 /* FBIvarReference.m */; };
@@ -78,6 +79,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		75069AAD1CD6AEF9001AFCEE /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		7508661F1CD6E387007CD157 /* BaseType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseType.h; sourceTree = "<group>"; };
 		75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectGraphConfiguration.h; sourceTree = "<group>"; };
 		75BDB3761C80E64100FD53A9 /* FBObjectGraphConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectGraphConfiguration.m; sourceTree = "<group>"; };
 		75BF0E181C5ADBCC00E0DAB6 /* FBRetainCycleDetector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FBRetainCycleDetector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,7 +102,7 @@
 		75BF0E481C5ADD3100E0DAB6 /* FBObjectiveCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectiveCBlock.h; sourceTree = "<group>"; };
 		75BF0E491C5ADD3100E0DAB6 /* FBObjectiveCBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCBlock.m; sourceTree = "<group>"; };
 		75BF0E4A1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectiveCGraphElement.h; sourceTree = "<group>"; };
-		75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCGraphElement.m; sourceTree = "<group>"; };
+		75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBObjectiveCGraphElement.mm; sourceTree = "<group>"; };
 		75BF0E4C1C5ADD3100E0DAB6 /* FBObjectiveCObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectiveCObject.h; sourceTree = "<group>"; };
 		75BF0E4D1C5ADD3100E0DAB6 /* FBObjectiveCObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCObject.m; sourceTree = "<group>"; };
 		75BF0E4F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "FBObjectiveCGraphElement+Internal.h"; sourceTree = "<group>"; };
@@ -112,13 +115,12 @@
 		75BF0E591C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBBlockStrongRelationDetector.h; sourceTree = "<group>"; };
 		75BF0E5A1C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBBlockStrongRelationDetector.m; sourceTree = "<group>"; };
 		75BF0E5C1C5ADD3100E0DAB6 /* FBClassStrongLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBClassStrongLayout.h; sourceTree = "<group>"; };
-		75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBClassStrongLayout.m; sourceTree = "<group>"; };
+		75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBClassStrongLayout.mm; sourceTree = "<group>"; };
 		75BF0E5E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBClassStrongLayoutHelpers.h; sourceTree = "<group>"; };
 		75BF0E5F1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBClassStrongLayoutHelpers.m; sourceTree = "<group>"; };
-		75BF0E611C5ADD3100E0DAB6 /* FBParsedStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBParsedStruct.h; sourceTree = "<group>"; };
-		75BF0E621C5ADD3100E0DAB6 /* FBParsedStruct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBParsedStruct.m; sourceTree = "<group>"; };
-		75BF0E631C5ADD3100E0DAB6 /* FBParsedType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBParsedType.h; sourceTree = "<group>"; };
-		75BF0E641C5ADD3100E0DAB6 /* FBParsedType.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBParsedType.m; sourceTree = "<group>"; };
+		75BF0E611C5ADD3100E0DAB6 /* Struct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Struct.h; sourceTree = "<group>"; };
+		75BF0E621C5ADD3100E0DAB6 /* Struct.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Struct.mm; sourceTree = "<group>"; };
+		75BF0E631C5ADD3100E0DAB6 /* Type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Type.h; sourceTree = "<group>"; };
 		75BF0E651C5ADD3100E0DAB6 /* FBStructEncodingParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBStructEncodingParser.h; sourceTree = "<group>"; };
 		75BF0E661C5ADD3100E0DAB6 /* FBStructEncodingParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBStructEncodingParser.mm; sourceTree = "<group>"; };
 		75BF0E681C5ADD3100E0DAB6 /* FBIvarReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBIvarReference.h; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75069AAE1CD6AEF9001AFCEE /* UIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +167,7 @@
 		75BF0E0E1C5ADBCC00E0DAB6 = {
 			isa = PBXGroup;
 			children = (
+				75069AAD1CD6AEF9001AFCEE /* UIKit.framework */,
 				75BF0E1A1C5ADBCC00E0DAB6 /* FBRetainCycleDetector */,
 				75BF0E281C5ADCA200E0DAB6 /* FBRetainCycleDetectorTests */,
 				75BF0E9A1C5ADDFB00E0DAB6 /* fishhook */,
@@ -260,7 +264,7 @@
 				75BF0E481C5ADD3100E0DAB6 /* FBObjectiveCBlock.h */,
 				75BF0E491C5ADD3100E0DAB6 /* FBObjectiveCBlock.m */,
 				75BF0E4A1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.h */,
-				75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.m */,
+				75BF0E4B1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm */,
 				75BF0E4C1C5ADD3100E0DAB6 /* FBObjectiveCObject.h */,
 				75BF0E4D1C5ADD3100E0DAB6 /* FBObjectiveCObject.m */,
 				75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */,
@@ -314,7 +318,7 @@
 			isa = PBXGroup;
 			children = (
 				75BF0E5C1C5ADD3100E0DAB6 /* FBClassStrongLayout.h */,
-				75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.m */,
+				75BF0E5D1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm */,
 				75BF0E5E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.h */,
 				75BF0E5F1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m */,
 				75BF0E601C5ADD3100E0DAB6 /* Parser */,
@@ -326,10 +330,10 @@
 		75BF0E601C5ADD3100E0DAB6 /* Parser */ = {
 			isa = PBXGroup;
 			children = (
-				75BF0E611C5ADD3100E0DAB6 /* FBParsedStruct.h */,
-				75BF0E621C5ADD3100E0DAB6 /* FBParsedStruct.m */,
-				75BF0E631C5ADD3100E0DAB6 /* FBParsedType.h */,
-				75BF0E641C5ADD3100E0DAB6 /* FBParsedType.m */,
+				7508661F1CD6E387007CD157 /* BaseType.h */,
+				75BF0E611C5ADD3100E0DAB6 /* Struct.h */,
+				75BF0E621C5ADD3100E0DAB6 /* Struct.mm */,
+				75BF0E631C5ADD3100E0DAB6 /* Type.h */,
 				75BF0E651C5ADD3100E0DAB6 /* FBStructEncodingParser.h */,
 				75BF0E661C5ADD3100E0DAB6 /* FBStructEncodingParser.mm */,
 			);
@@ -365,16 +369,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				75BF0E731C5ADD3100E0DAB6 /* FBRetainCycleDetector.h in Headers */,
-				75BF0E8F1C5ADD3100E0DAB6 /* FBParsedStruct.h in Headers */,
 				75BF0E7C1C5ADD3100E0DAB6 /* FBObjectiveCBlock.h in Headers */,
 				75BF0E831C5ADD3100E0DAB6 /* FBObjectiveCNSCFTimer.h in Headers */,
 				75BF0E7A1C5ADD3100E0DAB6 /* FBStandardGraphEdgeFilters.h in Headers */,
-				75BF0E931C5ADD3100E0DAB6 /* FBStructEncodingParser.h in Headers */,
 				75BF0E6D1C5ADD3100E0DAB6 /* FBAssociationManager.h in Headers */,
 				75BF0E7E1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.h in Headers */,
-				75BF0E911C5ADD3100E0DAB6 /* FBParsedType.h in Headers */,
 				75BDB3771C80E64100FD53A9 /* FBObjectGraphConfiguration.h in Headers */,
 				75BF0E801C5ADD3100E0DAB6 /* FBObjectiveCObject.h in Headers */,
+				75BF0E8F1C5ADD3100E0DAB6 /* Struct.h in Headers */,
+				75BF0E931C5ADD3100E0DAB6 /* FBStructEncodingParser.h in Headers */,
+				75BF0E911C5ADD3100E0DAB6 /* Type.h in Headers */,
 				75BF0E821C5ADD3100E0DAB6 /* FBObjectiveCGraphElement+Internal.h in Headers */,
 				75BF0E721C5ADD3100E0DAB6 /* FBRetainCycleDetector+Internal.h in Headers */,
 				75BF0E891C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h in Headers */,
@@ -385,6 +389,7 @@
 				75BF0E991C5ADD3100E0DAB6 /* FBObjectReference.h in Headers */,
 				75BF0E861C5ADD3100E0DAB6 /* FBBlockInterface.h in Headers */,
 				75BF0E871C5ADD3100E0DAB6 /* FBBlockStrongLayout.h in Headers */,
+				750866201CD6E387007CD157 /* BaseType.h in Headers */,
 				75BF0E761C5ADD3100E0DAB6 /* FBRetainCycleUtils.h in Headers */,
 				75BF0EA01C5ADDFB00E0DAB6 /* fishhook.h in Headers */,
 				75BF0E8B1C5ADD3100E0DAB6 /* FBClassStrongLayout.h in Headers */,
@@ -491,7 +496,6 @@
 			files = (
 				75BF0E881C5ADD3100E0DAB6 /* FBBlockStrongLayout.m in Sources */,
 				75BF0E6E1C5ADD3100E0DAB6 /* FBAssociationManager.mm in Sources */,
-				75BF0E921C5ADD3100E0DAB6 /* FBParsedType.m in Sources */,
 				75BF0E8A1C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.m in Sources */,
 				75BDB3781C80E64100FD53A9 /* FBObjectGraphConfiguration.m in Sources */,
 				75BF0E741C5ADD3100E0DAB6 /* FBRetainCycleDetector.mm in Sources */,
@@ -499,16 +503,16 @@
 				75BF0E9F1C5ADDFB00E0DAB6 /* fishhook.c in Sources */,
 				75BF0E7B1C5ADD3100E0DAB6 /* FBStandardGraphEdgeFilters.mm in Sources */,
 				75BF0E711C5ADD3100E0DAB6 /* FBNodeEnumerator.mm in Sources */,
-				75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.m in Sources */,
+				75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm in Sources */,
 				75BF0E941C5ADD3100E0DAB6 /* FBStructEncodingParser.mm in Sources */,
-				75BF0E901C5ADD3100E0DAB6 /* FBParsedStruct.m in Sources */,
+				75BF0E901C5ADD3100E0DAB6 /* Struct.mm in Sources */,
 				75BF0E771C5ADD3100E0DAB6 /* FBRetainCycleUtils.m in Sources */,
 				75BF0E841C5ADD3100E0DAB6 /* FBObjectiveCNSCFTimer.mm in Sources */,
 				75BF0E811C5ADD3100E0DAB6 /* FBObjectiveCObject.m in Sources */,
 				75BF0E8E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m in Sources */,
 				75BF0E961C5ADD3100E0DAB6 /* FBIvarReference.m in Sources */,
 				75BF0E7D1C5ADD3100E0DAB6 /* FBObjectiveCBlock.m in Sources */,
-				75BF0E7F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.m in Sources */,
+				75BF0E7F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

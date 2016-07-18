@@ -38,10 +38,7 @@ Pod::Spec.new do |s|
     'FBRetainCycleDetector/Graph/Specialization/FBObjectiveCNSCFTimer.h',
     'FBRetainCycleDetector/Graph/FBObjectiveCObject.h',
     'FBRetainCycleDetector/Graph/FBObjectGraphConfiguration.h',
-    'FBRetainCycleDetector/Layout/Classes/Parser/FBParsedStruct.h',
-    'FBRetainCycleDetector/Layout/Classes/Parser/FBParsedType.h',
     'FBRetainCycleDetector/Filtering/FBStandardGraphEdgeFilters.h',
-    'FBRetainCycleDetector/Layout/Classes/Parser/FBStructEncodingParser.h',
   ]
 
   s.framework = "Foundation", "CoreGraphics", "UIKit"
