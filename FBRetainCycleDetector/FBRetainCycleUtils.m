@@ -36,7 +36,7 @@ FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(FBObjectiveCGraphE
                                                               id object,
                                                               FBObjectGraphConfiguration *configuration,
                                                               NSArray<NSString *> *namePath) {
-  if (_ShouldBreakGraphEdge(configuration, sourceElement, [namePath objectAtIndex:0], object_getClass(object))) {
+  if (_ShouldBreakGraphEdge(configuration, sourceElement, [namePath firstObject], object_getClass(object))) {
     return nil;
   }
   
