@@ -89,7 +89,7 @@ NSSet *retainCycles = [detector findRetainCycles];
 
 Every filter is a block that having two `FBObjectiveCGraphElement` objects can say, if their relation is valid.
 
-Check [FBStandardGraphEdgeFilters](FBRetainCycleDetector/Filters/FBStandardGraphEdgeFilters.h) to learn more about how to use filters.
+Check [FBStandardGraphEdgeFilters](FBRetainCycleDetector/Filtering/FBStandardGraphEdgeFilters.h) to learn more about how to use filters.
 
 ### NSTimer
 
@@ -129,7 +129,7 @@ If you want to profile your app, you might want to have an abstraction over how 
 `FBAllocationTracker` and `FBRetainCycleDetector` can work nicely together. We have created a small example and drop-in project called [FBMemoryProfiler](https://github.com/facebook/FBMemoryProfiler) that leverages both these projects. It offers you very basic UI that you can use to track all allocations and force retain cycle detection from UI.
 
 ## Contributing
-See the [CONTRIBUTING](CONTRIBUTING) file for how to help out.
+See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## License
 [`FBRetainCycleDetector` is BSD-licensed](LICENSE). We also provide an additional [patent grant](PATENTS).
