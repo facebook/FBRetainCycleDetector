@@ -105,10 +105,14 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
         const auto locBefore = scanner.index;
         auto parseResult = _ParseStructEncodingWithScanner(scanner, debugStruct);
         
-        const auto nameFromBefore = std::dynamic_pointer_cast<Unresolved>(types.back());
-        NSCAssert(nameFromBefore, @"There should always be a name from before if we hit a struct; debug_struct: %@", debugStruct);
-        types.pop_back();
-        std::shared_ptr<Struct> type = std::make_shared<Struct>(nameFromBefore->value,
+        std::shared_ptr<Unresolved> valueFromBefore;
+        if (!types.empty()) {
+          valueFromBefore = std::dynamic_pointer_cast<Unresolved>(types.back());
+          types.pop_back();
+        }
+        const auto extractedNameFromBefore = valueFromBefore ? valueFromBefore->value
+                                                             : "";
+        std::shared_ptr<Struct> type = std::make_shared<Struct>(extractedNameFromBefore,
                                                                 scanner.string.substr(locBefore, (scanner.index - locBefore)),
                                                                 parseResult.typeName,
                                                                 parseResult.containedTypes);
