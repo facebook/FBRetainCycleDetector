@@ -45,16 +45,22 @@ struct _RCDTestStructWithUnnamedBitfield {
   unsigned : 4;
 };
 
+struct _RCDTestStructWithUnnamedStruct {
+  struct {
+    bool value;
+  };
+};
+
 @interface _RCDParserTestClass : NSObject
 @property (nonatomic, assign) _RCDTestStructWithPrimitive structWithPrimitive;
 @property (nonatomic, assign) _RCDTestStructWithObject structWithObject;
 @property (nonatomic, assign) _RCDTestStructWithObjectPrimitiveMixin structWithObjectPrimitiveMixin;
 @property (nonatomic, assign) _RCDTestStructWithNestedStruct structWithNestedStruct;
 @property (nonatomic, assign) _RCDTestStructWithUnnamedBitfield structWithUnnamedBitfield;
+@property (nonatomic, assign) _RCDTestStructWithUnnamedStruct structWithUnnamedStruct;
 @end
 @implementation _RCDParserTestClass
 @end
-
 
 
 @implementation FBStructEncodingTests
@@ -182,6 +188,25 @@ struct _RCDTestStructWithUnnamedBitfield {
     "_RCDTestStructWithObjectPrimitiveMixin",
   };
   XCTAssertEqual(innerStruct->typesContainedInStruct[1]->typePath, expectedNamePath);
+}
+
+- (void)testThatParserWillParseStructWithUnnamedStruct
+{
+  std::string encoding = [self _getIvarEncodingByName:@"_structWithUnnamedStruct"
+                                             forClass:[_RCDParserTestClass class]];
+  XCTAssertTrue(encoding.length() > 0);
+  FB::RetainCycleDetector::Parser::Struct parsedStruct =
+  FB::RetainCycleDetector::Parser::parseStructEncoding(encoding);
+  
+  XCTAssertEqual(parsedStruct.typesContainedInStruct.size(), 1);
+  
+  std::shared_ptr<FB::RetainCycleDetector::Parser::Struct> innerStruct =
+  std::dynamic_pointer_cast<FB::RetainCycleDetector::Parser::Struct>(parsedStruct.typesContainedInStruct[0]);
+  XCTAssertTrue(innerStruct);
+  
+  XCTAssertEqual(innerStruct->typesContainedInStruct.size(), 1);
+  XCTAssertEqual(innerStruct->typesContainedInStruct[0]->name, "value");
+  XCTAssertEqual(innerStruct->typesContainedInStruct[0]->typeEncoding, "B");
 }
 
 @end
