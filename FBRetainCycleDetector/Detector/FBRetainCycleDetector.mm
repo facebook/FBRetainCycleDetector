@@ -77,10 +77,9 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
     }
   }
     
-  NSMutableSet<NSArray<FBObjectiveCGraphElement *> *> *finalSet = [NSMutableSet setWithSet:allRetainCycles];
-  [finalSet minusSet:remove];
+  [allRetainCycles minusSet:remove];
 
-  return finalSet;
+  return allRetainCycles;
 }
 
 - (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)_findRetainCyclesInObject:(FBObjectiveCGraphElement *)graphElement
