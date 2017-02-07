@@ -167,7 +167,7 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(Class aCls)
   const uint8_t *fullLayout = class_getIvarLayout(aCls);
 
   if (!fullLayout) {
-    return nil;
+    return @[];
   }
 
   NSUInteger minimumIndex = FBGetMinimumIvarIndex(aCls);
