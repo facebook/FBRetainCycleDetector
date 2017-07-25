@@ -24,6 +24,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
 {
   NSMutableArray *_candidates;
   FBObjectGraphConfiguration *_configuration;
+  NSMutableSet *_objectSet;
 }
 
 - (instancetype)initWithConfiguration:(FBObjectGraphConfiguration *)configuration
@@ -31,8 +32,9 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   if (self = [super init]) {
     _configuration = configuration;
     _candidates = [NSMutableArray new];
+    _objectSet = [NSMutableSet new];
   }
-  
+
   return self;
 }
 
@@ -65,6 +67,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
     [allRetainCycles unionSet:retainCycles];
   }
   [_candidates removeAllObjects];
+  [_objectSet removeAllObjects];
 
   return allRetainCycles;
 }
@@ -94,6 +97,18 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
     @autoreleasepool {
       // Take topmost node in stack and mark it as visited
       FBNodeEnumerator *top = [stack lastObject];
+
+      // We don't want to retraverse the same subtree
+      if (![objectsOnPath containsObject:top]) {
+        if ([_objectSet containsObject:@([top.object objectAddress])]) {
+          [stack removeLastObject];
+          continue;
+        }
+        // Add the object address to the set as an NSNumber to avoid
+        // unnecessarily retaining the object
+        [_objectSet addObject:@([top.object objectAddress])];
+      }
+
       [objectsOnPath addObject:top];
 
       // Take next adjecent node to that child. Wrapper object can

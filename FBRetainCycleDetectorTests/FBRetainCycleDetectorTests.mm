@@ -324,6 +324,48 @@ typedef struct {
   XCTAssertTrue([retainCycles containsObject:thirdCycle]);
 }
 
+/**
+    1   5<-
+   / \ /^\|
+  2   3 | 6
+      |/
+      4
+ */
+- (void)testThatDetectorWillCatchCyclesWithoutRetraversing
+{
+  _RCDTestClass *testObject1 = [_RCDTestClass new];
+  _RCDTestClass *testObject2 = [_RCDTestClass new];
+  _RCDTestClass *testObject3 = [_RCDTestClass new];
+  _RCDTestClass *testObject4 = [_RCDTestClass new];
+  _RCDTestClass *testObject5 = [_RCDTestClass new];
+  _RCDTestClass *testObject6 = [_RCDTestClass new];
+
+  testObject1.object = testObject2;
+  testObject1.secondObject = testObject3;
+  testObject5.object = testObject3;
+  testObject5.secondObject = testObject6;
+  testObject3.object = testObject4;
+  testObject4.object = testObject5;
+  testObject6.object = testObject5;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:testObject1];
+  [detector addCandidate:testObject2];
+  NSSet *retainCycles = [detector findRetainCycles];
+
+  NSArray *firstCycle = [detector _shiftToUnifiedCycle:
+                         @[[[FBObjectiveCObject alloc] initWithObject:testObject3],
+                            [[FBObjectiveCObject alloc] initWithObject:testObject4],
+                            [[FBObjectiveCObject alloc] initWithObject:testObject5]]];
+
+  NSArray *secondCycle = [detector _shiftToUnifiedCycle:
+                         @[[[FBObjectiveCObject alloc] initWithObject:testObject5],
+                           [[FBObjectiveCObject alloc] initWithObject:testObject6]]];
+
+  XCTAssertTrue([retainCycles containsObject:firstCycle]);
+  XCTAssertTrue([retainCycles containsObject:secondCycle]);
+}
+
 - (void)testThatDetectorWillFindCycleWithFewCollectionsMixedInIt
 {
   _RCDTestClass *testObject = [_RCDTestClass new];
