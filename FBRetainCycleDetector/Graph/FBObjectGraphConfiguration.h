@@ -27,6 +27,8 @@ typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nul
                                                   NSString *_Nullable byIvar,
                                                   Class _Nullable toObjectOfClass);
 
+typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformerBlock)(FBObjectiveCGraphElement *_Nonnull fromObject);
+
 /**
  FBObjectGraphConfiguration represents a configuration for object graph walking.
  It can hold filters and detector specific options.
@@ -47,6 +49,8 @@ typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nul
  */
 @property (nonatomic, readonly, copy, nullable) NSArray<FBGraphEdgeFilterBlock> *filterBlocks;
 
+@property (nonatomic, readonly, copy, nullable) FBObjectiveCGraphElementTransformerBlock transformerBlock;
+
 /**
  Decides if object graph walker should look for retain cycles inside NSTimers.
  */
@@ -59,6 +63,10 @@ typedef FBGraphEdgeType (^FBGraphEdgeFilterBlock)(FBObjectiveCGraphElement *_Nul
 @property (nonatomic, readonly) BOOL shouldCacheLayouts;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
-                         shouldInspectTimers:(BOOL)shouldInspectTimers NS_DESIGNATED_INITIALIZER;
+                         shouldInspectTimers:(BOOL)shouldInspectTimers 
+                            transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock NS_DESIGNATED_INITIALIZER;
+
+- (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                         shouldInspectTimers:(BOOL)shouldInspectTimers;
 
 @end

@@ -39,23 +39,24 @@ FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(FBObjectiveCGraphE
   if (_ShouldBreakGraphEdge(configuration, sourceElement, [namePath firstObject], object_getClass(object))) {
     return nil;
   }
-  
+  FBObjectiveCGraphElement *newElement;
   if (FBObjectIsBlock((__bridge void *)object)) {
-    return [[FBObjectiveCBlock alloc] initWithObject:object
-                                      configuration:configuration
-                                            namePath:namePath];
+    newElement = [[FBObjectiveCBlock alloc] initWithObject:object
+                                             configuration:configuration
+                                                  namePath:namePath];
   } else {
     if ([object_getClass(object) isSubclassOfClass:[NSTimer class]] &&
         configuration.shouldInspectTimers) {
-      return [[FBObjectiveCNSCFTimer alloc] initWithObject:object
-                                             configuration:configuration
-                                                  namePath:namePath];
+      newElement = [[FBObjectiveCNSCFTimer alloc] initWithObject:object
+                                                   configuration:configuration
+                                                        namePath:namePath];
     } else {
-      return [[FBObjectiveCObject alloc] initWithObject:object
-                                          configuration:configuration
-                                               namePath:namePath];
+      newElement = [[FBObjectiveCObject alloc] initWithObject:object
+                                                configuration:configuration
+                                                     namePath:namePath];
     }
   }
+  return (configuration && configuration.transformerBlock) ? configuration.transformerBlock(newElement) : newElement;
 }
 
 FBObjectiveCGraphElement *FBWrapObjectGraphElement(FBObjectiveCGraphElement *sourceElement,
