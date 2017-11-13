@@ -57,14 +57,28 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 @property (nonatomic, readonly) BOOL shouldInspectTimers;
 
 /**
+ Decides if block objects should include their invocation address (the code part of the block) in the report.
+ If set to YES, then it will change from: `MallocBlock` to `<<MallocBlock:0xADDR>>`.
+ You can then symbolicate the address to retrieve a symbol name which will look like:
+ `__FOO_block_invoke` where FOO is replaced by the function creating the block.
+ This will allow easier understanding of the code involved in the cycle when blocks are involved.
+ */
+@property (nonatomic, readonly) BOOL shouldIncludeBlockAddress;
+
+/**
  Will cache layout
  */
 @property (nonatomic, readonly, nullable) NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache;
 @property (nonatomic, readonly) BOOL shouldCacheLayouts;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
-                         shouldInspectTimers:(BOOL)shouldInspectTimers 
-                            transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock NS_DESIGNATED_INITIALIZER;
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                         transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
+                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress NS_DESIGNATED_INITIALIZER;
+
+- (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                         transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                          shouldInspectTimers:(BOOL)shouldInspectTimers;

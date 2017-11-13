@@ -102,9 +102,9 @@
 {
   if (_namePath) {
     NSString *namePathStringified = [_namePath componentsJoinedByString:@" -> "];
-    return [NSString stringWithFormat:@"-> %@ -> %@ ", namePathStringified, object_getClass(_object)];
+    return [NSString stringWithFormat:@"-> %@ -> %@ ", namePathStringified, [self classNameOrNull]];
   }
-  return [NSString stringWithFormat:@"-> %@ ", object_getClass(_object)];
+  return [NSString stringWithFormat:@"-> %@ ", [self classNameOrNull]];
 }
 
 - (size_t)objectAddress
@@ -114,7 +114,7 @@
 
 - (NSString *)classNameOrNull
 {
-  NSString *className = NSStringFromClass(object_getClass(_object));
+  NSString *className = NSStringFromClass([self objectClass]);
   if (!className) {
     className = @"Null";
   }
