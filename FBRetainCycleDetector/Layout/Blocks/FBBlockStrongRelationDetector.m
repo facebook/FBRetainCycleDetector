@@ -47,4 +47,9 @@ static void byref_dispose_nop(struct _block_byref_block *param) {}
   [super release];
 }
 
+- (void *)forwarding
+{
+  return self->forwarding;
+}
+
 @end

@@ -36,4 +36,6 @@ struct _block_byref_block;
 
 - (oneway void)trueRelease;
 
+- (void *)forwarding;
+
 @end
