@@ -69,7 +69,22 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   [_candidates removeAllObjects];
   [_objectSet removeAllObjects];
 
-  return allRetainCycles;
+  //filter
+  NSMutableSet<NSArray<FBObjectiveCGraphElement *> *> *remove = [NSMutableSet set];
+  for (NSArray<FBObjectiveCGraphElement *> *itemCycle in allRetainCycles) {
+    for (FBObjectiveCGraphElement *element in itemCycle) {
+      if (!element.object) {
+        ///retain cycle has been broken
+        [remove addObject:itemCycle];
+      }
+    }
+  }
+    
+  NSMutableSet<NSArray<FBObjectiveCGraphElement *> *> *finalSet = [NSMutableSet setWithSet:allRetainCycles];
+  [allRetainCycles minusSet:remove];
+  [finalSet minusSet:remove];
+    
+  return finalSet;
 }
 
 - (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)_findRetainCyclesInObject:(FBObjectiveCGraphElement *)graphElement
