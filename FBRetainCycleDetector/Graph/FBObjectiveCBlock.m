@@ -72,7 +72,7 @@ struct __attribute__((packed)) BlockLiteral {
 {
   NSString *className = NSStringFromClass([self objectClass]);
   if (!className) {
-    className = @"Null";
+    className = @"(null)";
   }
 
   if (!self.configuration.shouldIncludeBlockAddress) {

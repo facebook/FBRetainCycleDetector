@@ -69,6 +69,21 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   [_candidates removeAllObjects];
   [_objectSet removeAllObjects];
 
+  // Filter cycles that have been broken down since we found them.
+  // These are false-positive that were picked-up and are transient cycles.
+  NSMutableSet<NSArray<FBObjectiveCGraphElement *> *> *brokenCycles = [NSMutableSet set];
+  for (NSArray<FBObjectiveCGraphElement *> *itemCycle in allRetainCycles) {
+    for (FBObjectiveCGraphElement *element in itemCycle) {
+      if (element.object == nil) {
+        // At least one element of the cycle has been removed, thus breaking
+        // the cycle.
+        [brokenCycles addObject:itemCycle];
+        break;
+      }
+    }
+  }
+  [allRetainCycles minusSet:brokenCycles];
+
   return allRetainCycles;
 }
 

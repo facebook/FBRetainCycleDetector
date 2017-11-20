@@ -116,7 +116,7 @@
 {
   NSString *className = NSStringFromClass([self objectClass]);
   if (!className) {
-    className = @"Null";
+    className = @"(null)";
   }
 
   return className;
