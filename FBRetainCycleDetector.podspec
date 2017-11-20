@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "FBRetainCycleDetector"
-  s.version      = "0.1.3"
+  s.version      = "0.1.4"
   s.summary      = "Library that helps with detecting retain cycles in iOS apps"
   s.homepage     = "https://github.com/facebook/FBRetainCycleDetector"
   s.license      = "BSD"
@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.platform     = :ios, "7.0"
   s.source       = {
     :git => "https://github.com/facebook/FBRetainCycleDetector.git",
-    :tag => "0.1.3"
+    :tag => "0.1.4"
   }
   s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,fishhook}/**/*.{h,m,mm,c}"
 
