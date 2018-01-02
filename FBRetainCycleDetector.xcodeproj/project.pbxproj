@@ -53,8 +53,8 @@
 		75BF0E971C5ADD3100E0DAB6 /* FBObjectInStructReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E6A1C5ADD3100E0DAB6 /* FBObjectInStructReference.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E981C5ADD3100E0DAB6 /* FBObjectInStructReference.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E6B1C5ADD3100E0DAB6 /* FBObjectInStructReference.m */; };
 		75BF0E991C5ADD3100E0DAB6 /* FBObjectReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E6C1C5ADD3100E0DAB6 /* FBObjectReference.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		75BF0E9F1C5ADDFB00E0DAB6 /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E9B1C5ADDFB00E0DAB6 /* fishhook.c */; };
-		75BF0EA01C5ADDFB00E0DAB6 /* fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E9C1C5ADDFB00E0DAB6 /* fishhook.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		75BF0E9F1C5ADDFB00E0DAB6 /* rcd_fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */; };
+		75BF0EA01C5ADDFB00E0DAB6 /* rcd_fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0EAF1C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA31C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm */; };
 		75BF0EB01C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA41C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		75BF0EB11C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */; };
@@ -128,8 +128,8 @@
 		75BF0E6A1C5ADD3100E0DAB6 /* FBObjectInStructReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectInStructReference.h; sourceTree = "<group>"; };
 		75BF0E6B1C5ADD3100E0DAB6 /* FBObjectInStructReference.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectInStructReference.m; sourceTree = "<group>"; };
 		75BF0E6C1C5ADD3100E0DAB6 /* FBObjectReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectReference.h; sourceTree = "<group>"; };
-		75BF0E9B1C5ADDFB00E0DAB6 /* fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fishhook.c; sourceTree = "<group>"; };
-		75BF0E9C1C5ADDFB00E0DAB6 /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
+		75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rcd_fishhook.c; sourceTree = "<group>"; };
+		75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rcd_fishhook.h; sourceTree = "<group>"; };
 		75BF0EA31C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBAssociationManagerTests.mm; sourceTree = "<group>"; };
 		75BF0EA41C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockRecognizingTests.mm; sourceTree = "<group>"; };
 		75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockStrongLayoutTests.mm; sourceTree = "<group>"; };
@@ -355,8 +355,8 @@
 		75BF0E9A1C5ADDFB00E0DAB6 /* fishhook */ = {
 			isa = PBXGroup;
 			children = (
-				75BF0E9B1C5ADDFB00E0DAB6 /* fishhook.c */,
-				75BF0E9C1C5ADDFB00E0DAB6 /* fishhook.h */,
+				75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */,
+				75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */,
 			);
 			path = fishhook;
 			sourceTree = "<group>";
@@ -391,7 +391,7 @@
 				75BF0E871C5ADD3100E0DAB6 /* FBBlockStrongLayout.h in Headers */,
 				750866201CD6E387007CD157 /* BaseType.h in Headers */,
 				75BF0E761C5ADD3100E0DAB6 /* FBRetainCycleUtils.h in Headers */,
-				75BF0EA01C5ADDFB00E0DAB6 /* fishhook.h in Headers */,
+				75BF0EA01C5ADDFB00E0DAB6 /* rcd_fishhook.h in Headers */,
 				75BF0E8B1C5ADD3100E0DAB6 /* FBClassStrongLayout.h in Headers */,
 				75BF0E6F1C5ADD3100E0DAB6 /* FBAssociationManager+Internal.h in Headers */,
 			);
@@ -500,7 +500,7 @@
 				75BDB3781C80E64100FD53A9 /* FBObjectGraphConfiguration.m in Sources */,
 				75BF0E741C5ADD3100E0DAB6 /* FBRetainCycleDetector.mm in Sources */,
 				75BF0E981C5ADD3100E0DAB6 /* FBObjectInStructReference.m in Sources */,
-				75BF0E9F1C5ADDFB00E0DAB6 /* fishhook.c in Sources */,
+				75BF0E9F1C5ADDFB00E0DAB6 /* rcd_fishhook.c in Sources */,
 				75BF0E7B1C5ADD3100E0DAB6 /* FBStandardGraphEdgeFilters.mm in Sources */,
 				75BF0E711C5ADD3100E0DAB6 /* FBNodeEnumerator.mm in Sources */,
 				75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm in Sources */,
