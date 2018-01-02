@@ -22,7 +22,7 @@
 #import "FBAssociationManager+Internal.h"
 #import "FBRetainCycleDetector.h"
 
-#import "fishhook.h"
+#import "rcd_fishhook.h"
 
 #if _INTERNAL_RCD_ENABLED
 
