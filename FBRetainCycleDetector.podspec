@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
     :git => "https://github.com/facebook/FBRetainCycleDetector.git",
     :tag => "0.1.4"
   }
-  s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,fishhook}/**/*.{h,m,mm,c}"
+  s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,rcd_fishhook}/**/*.{h,m,mm,c}"
 
   mrr_files = [
     'FBRetainCycleDetector/Associations/FBAssociationManager.h',
@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
   files = files.reject {|file| mrr_files.include?(file)}
 
   s.requires_arc = files.sort + [
-    'fishhook/**/*.{c,h}'
+    'rcd_fishhook/**/*.{c,h}'
   ]
   s.public_header_files = [
     'FBRetainCycleDetector/Detector/FBRetainCycleDetector.h',
