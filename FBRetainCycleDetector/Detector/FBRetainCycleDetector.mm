@@ -235,7 +235,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   NSArray *currentMinimalArray = arrayOfClassNames;
   NSUInteger minimumIndex = 0;
 
-  for (NSUInteger i = 0; i < originalLength; ++i) {
+  for (NSUInteger i = 1; i < originalLength; ++i) {
     NSArray<NSString *> *nextSubarray = [copiedArray subarrayWithRange:NSMakeRange(i, originalLength)];
     if ([self _compareStringArray:currentMinimalArray
                         withArray:nextSubarray] == NSOrderedDescending) {

@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
   files = files.map {|file| file.to_path}
   files = files.reject {|file| mrr_files.include?(file)}
 
-  s.requires_arc = files + [
+  s.requires_arc = files.sort + [
     'rcd_fishhook/**/*.{c,h}'
   ]
   s.public_header_files = [
