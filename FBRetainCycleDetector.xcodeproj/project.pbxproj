@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		74C01572205943710020B6F0 /* rcd_fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 74C0156E205943710020B6F0 /* rcd_fishhook.c */; };
+		74C01573205943710020B6F0 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 74C0156F205943710020B6F0 /* LICENSE */; };
+		74C01574205943710020B6F0 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 74C01570205943710020B6F0 /* README.md */; };
+		74C01575205943710020B6F0 /* rcd_fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 74C01571205943710020B6F0 /* rcd_fishhook.h */; };
 		75069AAE1CD6AEF9001AFCEE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75069AAD1CD6AEF9001AFCEE /* UIKit.framework */; };
 		750866201CD6E387007CD157 /* BaseType.h in Headers */ = {isa = PBXBuildFile; fileRef = 7508661F1CD6E387007CD157 /* BaseType.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BDB3771C80E64100FD53A9 /* FBObjectGraphConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -53,8 +57,6 @@
 		75BF0E971C5ADD3100E0DAB6 /* FBObjectInStructReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E6A1C5ADD3100E0DAB6 /* FBObjectInStructReference.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0E981C5ADD3100E0DAB6 /* FBObjectInStructReference.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E6B1C5ADD3100E0DAB6 /* FBObjectInStructReference.m */; };
 		75BF0E991C5ADD3100E0DAB6 /* FBObjectReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E6C1C5ADD3100E0DAB6 /* FBObjectReference.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		75BF0E9F1C5ADDFB00E0DAB6 /* rcd_fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */; };
-		75BF0EA01C5ADDFB00E0DAB6 /* rcd_fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		75BF0EAF1C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA31C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm */; };
 		75BF0EB01C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA41C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		75BF0EB11C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */; };
@@ -79,6 +81,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		74C0156E205943710020B6F0 /* rcd_fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rcd_fishhook.c; sourceTree = "<group>"; };
+		74C0156F205943710020B6F0 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		74C01570205943710020B6F0 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		74C01571205943710020B6F0 /* rcd_fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rcd_fishhook.h; sourceTree = "<group>"; };
 		75069AAD1CD6AEF9001AFCEE /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		7508661F1CD6E387007CD157 /* BaseType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseType.h; sourceTree = "<group>"; };
 		75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectGraphConfiguration.h; sourceTree = "<group>"; };
@@ -128,8 +134,6 @@
 		75BF0E6A1C5ADD3100E0DAB6 /* FBObjectInStructReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectInStructReference.h; sourceTree = "<group>"; };
 		75BF0E6B1C5ADD3100E0DAB6 /* FBObjectInStructReference.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectInStructReference.m; sourceTree = "<group>"; };
 		75BF0E6C1C5ADD3100E0DAB6 /* FBObjectReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectReference.h; sourceTree = "<group>"; };
-		75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rcd_fishhook.c; sourceTree = "<group>"; };
-		75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rcd_fishhook.h; sourceTree = "<group>"; };
 		75BF0EA31C5ADE1B00E0DAB6 /* FBAssociationManagerTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBAssociationManagerTests.mm; sourceTree = "<group>"; };
 		75BF0EA41C5ADE1B00E0DAB6 /* FBBlockRecognizingTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockRecognizingTests.mm; sourceTree = "<group>"; };
 		75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockStrongLayoutTests.mm; sourceTree = "<group>"; };
@@ -164,13 +168,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		74C0156D205943710020B6F0 /* rcd_fishhook */ = {
+			isa = PBXGroup;
+			children = (
+				74C01571205943710020B6F0 /* rcd_fishhook.h */,
+				74C0156E205943710020B6F0 /* rcd_fishhook.c */,
+				74C0156F205943710020B6F0 /* LICENSE */,
+				74C01570205943710020B6F0 /* README.md */,
+			);
+			path = rcd_fishhook;
+			sourceTree = "<group>";
+		};
 		75BF0E0E1C5ADBCC00E0DAB6 = {
 			isa = PBXGroup;
 			children = (
 				75069AAD1CD6AEF9001AFCEE /* UIKit.framework */,
 				75BF0E1A1C5ADBCC00E0DAB6 /* FBRetainCycleDetector */,
 				75BF0E281C5ADCA200E0DAB6 /* FBRetainCycleDetectorTests */,
-				75BF0E9A1C5ADDFB00E0DAB6 /* fishhook */,
+				74C0156D205943710020B6F0 /* rcd_fishhook */,
 				75BF0E191C5ADBCC00E0DAB6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -352,15 +367,6 @@
 			path = Reference;
 			sourceTree = "<group>";
 		};
-		75BF0E9A1C5ADDFB00E0DAB6 /* fishhook */ = {
-			isa = PBXGroup;
-			children = (
-				75BF0E9B1C5ADDFB00E0DAB6 /* rcd_fishhook.c */,
-				75BF0E9C1C5ADDFB00E0DAB6 /* rcd_fishhook.h */,
-			);
-			path = fishhook;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -370,6 +376,7 @@
 			files = (
 				75BF0E731C5ADD3100E0DAB6 /* FBRetainCycleDetector.h in Headers */,
 				75BF0E7C1C5ADD3100E0DAB6 /* FBObjectiveCBlock.h in Headers */,
+				74C01575205943710020B6F0 /* rcd_fishhook.h in Headers */,
 				75BF0E831C5ADD3100E0DAB6 /* FBObjectiveCNSCFTimer.h in Headers */,
 				75BF0E7A1C5ADD3100E0DAB6 /* FBStandardGraphEdgeFilters.h in Headers */,
 				75BF0E6D1C5ADD3100E0DAB6 /* FBAssociationManager.h in Headers */,
@@ -391,7 +398,6 @@
 				75BF0E871C5ADD3100E0DAB6 /* FBBlockStrongLayout.h in Headers */,
 				750866201CD6E387007CD157 /* BaseType.h in Headers */,
 				75BF0E761C5ADD3100E0DAB6 /* FBRetainCycleUtils.h in Headers */,
-				75BF0EA01C5ADDFB00E0DAB6 /* rcd_fishhook.h in Headers */,
 				75BF0E8B1C5ADD3100E0DAB6 /* FBClassStrongLayout.h in Headers */,
 				75BF0E6F1C5ADD3100E0DAB6 /* FBAssociationManager+Internal.h in Headers */,
 			);
@@ -476,6 +482,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				74C01574205943710020B6F0 /* README.md in Resources */,
+				74C01573205943710020B6F0 /* LICENSE in Resources */,
 				75BF0E851C5ADD3100E0DAB6 /* Circle-LICENSE in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -500,7 +508,6 @@
 				75BDB3781C80E64100FD53A9 /* FBObjectGraphConfiguration.m in Sources */,
 				75BF0E741C5ADD3100E0DAB6 /* FBRetainCycleDetector.mm in Sources */,
 				75BF0E981C5ADD3100E0DAB6 /* FBObjectInStructReference.m in Sources */,
-				75BF0E9F1C5ADDFB00E0DAB6 /* rcd_fishhook.c in Sources */,
 				75BF0E7B1C5ADD3100E0DAB6 /* FBStandardGraphEdgeFilters.mm in Sources */,
 				75BF0E711C5ADD3100E0DAB6 /* FBNodeEnumerator.mm in Sources */,
 				75BF0E8C1C5ADD3100E0DAB6 /* FBClassStrongLayout.mm in Sources */,
@@ -508,6 +515,7 @@
 				75BF0E901C5ADD3100E0DAB6 /* Struct.mm in Sources */,
 				75BF0E771C5ADD3100E0DAB6 /* FBRetainCycleUtils.m in Sources */,
 				75BF0E841C5ADD3100E0DAB6 /* FBObjectiveCNSCFTimer.mm in Sources */,
+				74C01572205943710020B6F0 /* rcd_fishhook.c in Sources */,
 				75BF0E811C5ADD3100E0DAB6 /* FBObjectiveCObject.m in Sources */,
 				75BF0E8E1C5ADD3100E0DAB6 /* FBClassStrongLayoutHelpers.m in Sources */,
 				75BF0E961C5ADD3100E0DAB6 /* FBIvarReference.m in Sources */,
