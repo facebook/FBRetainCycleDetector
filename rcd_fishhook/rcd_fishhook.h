@@ -27,6 +27,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if !defined(FISHHOOK_EXPORT)
+#define FISHHOOK_VISIBILITY __attribute__((visibility("hidden")))
+#else
+#define FISHHOOK_VISIBILITY __attribute__((visibility("default")))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -49,20 +55,22 @@ struct rcd_rebinding {
  * rebind are added to the existing list of rebindings, and if a given symbol
  * is rebound more than once, the later rebinding will take precedence.
  */
+FISHHOOK_VISIBILITY
 int rcd_rebind_symbols(struct rcd_rebinding rebindings[], size_t rebindings_nel);
 
 /*
  * Rebinds as above, but only in the specified image. The header should point
  * to the mach-o header, the slide should be the slide offset. Others as above.
  */
+FISHHOOK_VISIBILITY
 int rcd_rebind_symbols_image(void *header,
-                             intptr_t slide,
-                             struct rcd_rebinding rebindings[],
-                             size_t rebindings_nel);
+                         intptr_t slide,
+                         struct rcd_rebinding rebindings[],
+                         size_t rebindings_nel);
 
 #ifdef __cplusplus
 }
 #endif //__cplusplus
 
-#endif //fishhook_h
+#endif //rcd_fishhook_h
 
