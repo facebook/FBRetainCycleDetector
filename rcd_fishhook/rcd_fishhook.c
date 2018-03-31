@@ -58,13 +58,13 @@ struct rcd_rebindings_entry {
 static struct rcd_rebindings_entry *_rebindings_head;
 
 static int rcd_prepend_rebindings(struct rcd_rebindings_entry **rebindings_head,
-                                  struct rcd_rebinding rebindings[],
-                                  size_t nel) {
-  struct rcd_rebindings_entry *new_entry = malloc(sizeof(struct rcd_rebindings_entry));
+                              struct rcd_rebinding rebindings[],
+                              size_t nel) {
+  struct rcd_rebindings_entry *new_entry = (struct rcd_rebindings_entry *) malloc(sizeof(struct rcd_rebindings_entry));
   if (!new_entry) {
     return -1;
   }
-  new_entry->rebindings = malloc(sizeof(struct rcd_rebinding) * nel);
+  new_entry->rebindings = (struct rcd_rebinding *) malloc(sizeof(struct rcd_rebinding) * nel);
   if (!new_entry->rebindings) {
     free(new_entry);
     return -1;
@@ -77,11 +77,11 @@ static int rcd_prepend_rebindings(struct rcd_rebindings_entry **rebindings_head,
 }
 
 static void rcd_perform_rebinding_with_section(struct rcd_rebindings_entry *rebindings,
-                                               section_t *section,
-                                               intptr_t slide,
-                                               nlist_t *symtab,
-                                               char *strtab,
-                                               uint32_t *indirect_symtab) {
+                                           section_t *section,
+                                           intptr_t slide,
+                                           nlist_t *symtab,
+                                           char *strtab,
+                                           uint32_t *indirect_symtab) {
   uint32_t *indirect_symbol_indices = indirect_symtab + section->reserved1;
   void **indirect_symbol_bindings = (void **)((uintptr_t)slide + section->addr);
   for (uint i = 0; i < section->size / sizeof(void *); i++) {
@@ -92,10 +92,11 @@ static void rcd_perform_rebinding_with_section(struct rcd_rebindings_entry *rebi
     }
     uint32_t strtab_offset = symtab[symtab_index].n_un.n_strx;
     char *symbol_name = strtab + strtab_offset;
+    bool symbol_name_longer_than_1 = symbol_name[0] && symbol_name[1];
     struct rcd_rebindings_entry *cur = rebindings;
     while (cur) {
       for (uint j = 0; j < cur->rebindings_nel; j++) {
-        if (strlen(symbol_name) > 1 &&
+        if (symbol_name_longer_than_1 &&
             strcmp(&symbol_name[1], cur->rebindings[j].name) == 0) {
           if (cur->rebindings[j].replaced != NULL &&
               indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
@@ -179,12 +180,15 @@ static void _rebind_symbols_for_image(const struct mach_header *header,
 }
 
 int rcd_rebind_symbols_image(void *header,
-                             intptr_t slide,
-                             struct rcd_rebinding rebindings[],
-                             size_t rebindings_nel) {
+                         intptr_t slide,
+                         struct rcd_rebinding rebindings[],
+                         size_t rebindings_nel) {
     struct rcd_rebindings_entry *rebindings_head = NULL;
     int retval = rcd_prepend_rebindings(&rebindings_head, rebindings, rebindings_nel);
-    rebind_symbols_for_image(rebindings_head, header, slide);
+    rebind_symbols_for_image(rebindings_head, (const struct mach_header *) header, slide);
+    if (rebindings_head->rebindings) {
+      free(rebindings_head->rebindings);
+    }
     free(rebindings_head);
     return retval;
 }
