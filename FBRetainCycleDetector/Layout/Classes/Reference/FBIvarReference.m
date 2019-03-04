@@ -26,6 +26,10 @@
 
 - (FBType)_convertEncodingToType:(const char *)typeEncoding
 {
+  if (typeEncoding == NULL) {
+    return FBUnknownType;
+  }
+
   if (typeEncoding[0] == '{') {
     return FBStructType;
   }
