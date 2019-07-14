@@ -91,6 +91,18 @@
   XCTAssertFalse([retainCycles containsObject:[[FBObjectiveCObject alloc] initWithObject:testCollection]]);
 }
 
+- (void)testNSMapTableWithOpaqueMemoryOption {
+  NSMapTable *mapTableWithOpaqueMemory = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsIntegerPersonality valueOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsIntegerPersonality capacity:0];
+  NSInteger sample = 1;
+  [mapTableWithOpaqueMemory setObject:(__bridge id)((void *)sample) forKey:(__bridge id)((void *)sample)];
+  
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:mapTableWithOpaqueMemory];
+  NSSet *retainCycles = [detector findRetainCycles];
+  
+  XCTAssertFalse([retainCycles containsObject:[[FBObjectiveCObject alloc] initWithObject:mapTableWithOpaqueMemory]]);
+}
+
 #endif //_INTERNAL_RCD_ENABLED
 
 @end
