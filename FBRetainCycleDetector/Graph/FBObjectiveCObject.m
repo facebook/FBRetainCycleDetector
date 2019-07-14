@@ -113,6 +113,9 @@
 {
   if ([self.object respondsToSelector:@selector(valuePointerFunctions)]) {
     NSPointerFunctions *pointerFunctions = [self.object valuePointerFunctions];
+    if (pointerFunctions.acquireFunction == NULL) {
+      return NO;
+    }
     if (pointerFunctions.usesWeakReadAndWriteBarriers) {
       return NO;
     }
@@ -128,6 +131,9 @@
     // If object shows what pointer functions are used, lets try to determine
     // if it's not retaining objects
     NSPointerFunctions *pointerFunctions = [self.object pointerFunctions];
+    if (pointerFunctions.acquireFunction == NULL) {
+      return NO;
+    }
     if (pointerFunctions.usesWeakReadAndWriteBarriers) {
       // It's weak - we should not touch it
       return NO;
@@ -136,6 +142,9 @@
 
   if ([self.object respondsToSelector:@selector(keyPointerFunctions)]) {
     NSPointerFunctions *pointerFunctions = [self.object keyPointerFunctions];
+    if (pointerFunctions.acquireFunction == NULL) {
+      return NO;
+    }
     if (pointerFunctions.usesWeakReadAndWriteBarriers) {
       return NO;
     }
