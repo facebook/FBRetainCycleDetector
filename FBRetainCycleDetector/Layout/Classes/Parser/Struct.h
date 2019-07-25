@@ -19,7 +19,7 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
   class Struct: public Type {
   public:
     const std::string structTypeName;
-    
+
     Struct(const std::string &name,
            const std::string &typeEncoding,
            const std::string &structTypeName,
@@ -28,13 +28,12 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
       structTypeName(structTypeName),
     typesContainedInStruct(std::move(typesContainedInStruct)) {};
     Struct(Struct&&) = default;
-    Struct &operator=(Struct&&) = default;
-    
+
     Struct(const Struct&) = delete;
     Struct &operator=(const Struct&) = delete;
-    
+
     std::vector<std::shared_ptr<Type>> flattenTypes();
-    
+
     virtual void passTypePath(std::vector<std::string> typePath);
     std::vector<std::shared_ptr<Type>> typesContainedInStruct;
   };
