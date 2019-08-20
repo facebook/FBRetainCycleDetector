@@ -13,7 +13,7 @@
 #import <FBRetainCycleDetector/FBObjectiveCGraphElement+Internal.h>
 #import <FBRetainCycleDetector/FBObjectiveCObject.h>
 
-#import <FBRetaincycleDetector/FBRetainCycleDetector.h>
+#import <FBRetainCycleDetector/FBRetainCycleDetector.h>
 
 typedef void (^_RCDTestBlockType)();
 
