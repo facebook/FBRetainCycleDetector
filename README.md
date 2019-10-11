@@ -132,4 +132,4 @@ If you want to profile your app, you might want to have an abstraction over how 
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## License
-[`FBRetainCycleDetector` is BSD-licensed](LICENSE). We also provide an additional [patent grant](PATENTS).
+[`FBRetainCycleDetector` is BSD-licensed](LICENSE).
