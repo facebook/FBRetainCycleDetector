@@ -1,3 +1,4 @@
+
 # FBRetainCycleDetector
 [![Build Status](https://travis-ci.org/facebook/FBRetainCycleDetector.svg?branch=master)](https://travis-ci.org/facebook/FBRetainCycleDetector)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
@@ -7,7 +8,7 @@
 An iOS library that finds retain cycles using runtime analysis.
 
 ## About
-Retain cycles are one of the most common ways of creating memory leaks. It's incredibly easy to create a retain cycle, and tends to be hard to spot it.
+Retain cycles are one of the most common ways of creating memory leaks. It's incredibly easy to create a retain cycle and tends to be hard to spot it.
 The goal of FBRetainCycleDetector is to help find retain cycles at runtime.
 The features of this project were influenced by [Circle](https://github.com/mikeash/Circle).
 
@@ -21,7 +22,7 @@ To your Cartfile add:
 
 `FBRetainCycleDetector` is built out from non-debug builds, so when you want to test it, use 
 
-    carthage update --configuration Debug
+    Carthage update --configuration Debug
 
 ### CocoaPods
 
@@ -70,7 +71,7 @@ NSSet *retainCycles = [detector findRetainCyclesWithMaxCycleLength:100];
 
 ### Filters
 
-There could also be retain cycles that we would like to omit. It's because not every retain cycle is a leak, and we might want to filter them out.
+There could also retain cycles that we would like to omit. It's because not every retain cycle is a leak, and we might want to filter them out.
 To do so we need to specify filters:
 
 ```objc
@@ -87,7 +88,7 @@ FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfigu
 NSSet *retainCycles = [detector findRetainCycles];
 ```
 
-Every filter is a block that having two `FBObjectiveCGraphElement` objects can say, if their relation is valid.
+Every filter is a block that having two `FBObjectiveCGraphElement` objects can say if their relationship is valid.
 
 Check [FBStandardGraphEdgeFilters](FBRetainCycleDetector/Filtering/FBStandardGraphEdgeFilters.h) to learn more about how to use filters.
 
@@ -107,7 +108,7 @@ FBRetainCycleDetector *detector = [[FBRetainCycleDetector alloc] initWithConfigu
 
 Objective-C let's us set associated objects for every object using [objc_setAssociatedObject](https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ObjCRuntimeRef/#//apple_ref/c/func/objc_setAssociatedObject).
 
-These associated objects can lead to retain cycles if we use retaining policies, like `OBJC_ASSOCIATION_RETAIN_NONATOMIC`. FBRetainCycleDetector can catch these kinds of cycles, but to do so we need to set it up. Early in the application's lifetime, preferably in `main.m` we can add this:
+These associated objects can lead to retaining cycles if we use retaining policies, like `OBJC_ASSOCIATION_RETAIN_NONATOMIC`. FBRetainCycleDetector can catch these kinds of cycles, but to do so we need to set it up. Early in the application's lifetime, preferably in `main.m` we can add this:
 
 ```objc
 #import <FBRetainCycleDetector/FBAssociationManager.h>
@@ -124,9 +125,9 @@ In the code above `[FBAssociationManager hook]` will use [fishhook](https://gith
 
 ## Getting Candidates
 
-If you want to profile your app, you might want to have an abstraction over how to get candidates for `FBRetainCycleDetector`. While you can simply track it your own, you can also use [FBAllocationTracker](https://github.com/facebook/FBAllocationTracker). It's a small tool we created that can help you track the objects. It offers simple API that you can query for example for all instances of given class, or all class names currently tracked, etc.
+If you want to profile your app, you might want to have an abstraction over how to get candidates for `FBRetainCycleDetector`. While you can simply track it your own, you can also use [FBAllocationTracker](https://github.com/facebook/FBAllocationTracker). It's a small tool we created that can help you track the objects. It offers simple API that you can query for example for all instances of a given class, or all class names currently tracked, etc.
 
-`FBAllocationTracker` and `FBRetainCycleDetector` can work nicely together. We have created a small example and drop-in project called [FBMemoryProfiler](https://github.com/facebook/FBMemoryProfiler) that leverages both these projects. It offers you very basic UI that you can use to track all allocations and force retain cycle detection from UI.
+`FBAllocationTracker` and `FBRetainCycleDetector` can work nicely together. We have created a small example and drop-in project called [FBMemoryProfiler](https://github.com/facebook/FBMemoryProfiler) that leverages both these projects. It offers you a very basic UI that you can use to track all allocations and force retain cycle detection from UI.
 
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
