@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FBObjectiveCObject.h"
+#import <FBRetainCycleDetector/FBObjectiveCObject.h>
 
 /**
  Specialization of FBObjectiveCObject for NSTimer.
