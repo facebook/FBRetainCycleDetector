@@ -7,6 +7,7 @@
  */
 
 #import "FBObjectiveCGraphElement+Internal.h"
+#import <malloc/malloc.h>
 
 #import <objc/message.h>
 #import <objc/runtime.h>
@@ -39,22 +40,22 @@
 {
   if (self = [super init]) {
 #if _INTERNAL_RCD_ENABLED
-    // We are trying to mimic how ObjectiveC does storeWeak to not fall into
-    // _objc_fatal path
-    // https://github.com/bavarious/objc4/blob/3f282b8dbc0d1e501f97e4ed547a4a99cb3ac10b/runtime/objc-weak.mm#L369
-
-    Class aCls = object_getClass(object);
-
-    BOOL (*allowsWeakReference)(id, SEL) =
-    (__typeof__(allowsWeakReference))class_getMethodImplementation(aCls, @selector(allowsWeakReference));
-
-    if (allowsWeakReference && (IMP)allowsWeakReference != _objc_msgForward) {
-      if (allowsWeakReference(object, @selector(allowsWeakReference))) {
-        // This is still racey since allowsWeakReference could change it value by now.
+    malloc_zone_t *zone = malloc_zone_from_ptr((__bridge void *)object);
+    if (zone) {
+      // We are trying to mimic how ObjectiveC does storeWeak to not fall into
+      // _objc_fatal path
+      // https://github.com/bavarious/objc4/blob/3f282b8dbc0d1e501f97e4ed547a4a99cb3ac10b/runtime/objc-weak.mm#L369
+      Class aCls = object_getClass(object);
+      BOOL (*allowsWeakReference)(id, SEL) =
+      (__typeof__(allowsWeakReference))class_getMethodImplementation(aCls, @selector(allowsWeakReference));
+      if (allowsWeakReference && (IMP)allowsWeakReference != _objc_msgForward) {
+        if (allowsWeakReference(object, @selector(allowsWeakReference))) {
+          // This is still racey since allowsWeakReference could change it value by now.
+          _object = object;
+        }
+      } else {
         _object = object;
       }
-    } else {
-      _object = object;
     }
 #endif
     _namePath = namePath;
