@@ -18,6 +18,12 @@
 #import "FBRetainCycleUtils.h"
 #import "FBRetainCycleDetector.h"
 
+@protocol FBRetainCycleDetectorCustomClassDescribable
+
+- (NSString *)customClassDescription;
+
+@end
+
 @implementation FBObjectiveCGraphElement
 
 - (instancetype)initWithObject:(id)object
@@ -119,7 +125,14 @@
 
 - (NSString *)classNameOrNull
 {
-  NSString *className = NSStringFromClass([self objectClass]);
+  NSString *className;
+
+  if ([_object respondsToSelector:@selector(customClassDescription)]) {
+    className = [_object customClassDescription];
+  } else {
+    className = NSStringFromClass([self objectClass]);
+  }
+
   if (!className) {
     className = @"(null)";
   }
