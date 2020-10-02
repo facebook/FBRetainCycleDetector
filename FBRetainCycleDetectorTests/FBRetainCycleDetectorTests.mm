@@ -511,6 +511,7 @@ typedef struct {
   _RCDTestBlockType block = ^{
     unretainedObject = testObject;
   };
+  block = [block copy];
   testObject.block = block;
 
   FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
@@ -533,6 +534,7 @@ typedef struct {
   _RCDTestBlockType block = ^{
     unretainedObject = array;
   };
+  block = [block copy];
   testObject.block = block;
 
   FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
@@ -556,7 +558,8 @@ typedef struct {
 
   _RCDTestBlockType block1 = ^{unretainedObject = testObject1;};
   _RCDTestBlockType block2 = ^{unretainedObject = testObject2;};
-
+  block1 = [block1 copy];
+  block2 = [block2 copy];
   testObject1.block = block2;
   testObject2.block = block1;
 
