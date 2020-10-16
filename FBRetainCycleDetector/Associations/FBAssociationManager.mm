@@ -41,12 +41,7 @@ namespace FB { namespace AssociationManager {
     if (i == _associationMap->end()) {
       return;
     }
-
-    auto *refs = i->second;
-    auto j = refs->find(key);
-    if (j != refs->end()) {
-      refs->erase(j);
-    }
+    i->second->erase(key);
   }
 
   void _threadUnsafeSetStrongAssociation(id object, void *key, id value) {
@@ -126,9 +121,9 @@ namespace FB { namespace AssociationManager {
      a reference for some object, it will also release this value, which could cause it to dealloc.
      This is done inside _object_set_associative_reference without lock. Otherwise it would deadlock,
      since the object that is released, could also clean up some associated objects.
-     
+
      If we would keep a lock during that, we would fall for that deadlock.
-     
+
      Unfortunately this also means the association manager can be not a 100% accurate, since there
      can technically be a race condition between setting values on the same object and same key from
      different threads. (One thread sets value, other nil, we are missing this value)
@@ -141,7 +136,7 @@ namespace FB { namespace AssociationManager {
       std::lock_guard<std::mutex> l(*_associationMutex);
       _threadUnsafeRemoveAssociations(object);
     }
-    
+
     fb_orig_objc_removeAssociatedObjects(object);
   }
 
