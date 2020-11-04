@@ -77,27 +77,28 @@ static NSIndexSet *_GetBlockStrongLayout(void *block) {
 }
 
 NSArray *FBGetBlockStrongReferences(void *block) {
-  if (!FBObjectIsBlock(block)) {
-    return nil;
-  }
-  
-  NSMutableArray *results = [NSMutableArray new];
-
-  void **blockReference = block;
-  NSIndexSet *strongLayout = _GetBlockStrongLayout(block);
-  [strongLayout enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-    void **reference = &blockReference[idx];
-
-    if (reference && (*reference)) {
-      id object = (id)(*reference);
-
-      if (object) {
-        [results addObject:object];
-      }
+    if (!FBObjectIsBlock(block)) {
+      return nil;
     }
-  }];
 
-  return [results autorelease];
+    NSMutableArray *results = [NSMutableArray new];
+
+    struct BlockLiteral *blockLiteral = block;
+
+    if (!(blockLiteral->flags & BLOCK_HAS_EXTENDED_LAYOUT) ||
+        !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE) ||
+        !(blockLiteral->flags & BLOCK_HAS_SIGNATURE)) return results;
+
+    int strongReferenceCount = ((int)blockLiteral->descriptor->layout & 0xF00) >> 8;
+    if (!strongReferenceCount) return results;
+
+    void *desc = (uint8_t *)block + sizeof(*blockLiteral);
+    for (int i = 0; i < strongReferenceCount; i++, desc += sizeof(void *)) {
+        id strongRef = (__bridge id)(*((void **)desc));
+        [results addObject:strongRef];
+    }
+
+    return results;
 }
 
 static Class _BlockClass() {
@@ -116,7 +117,7 @@ static Class _BlockClass() {
 
 BOOL FBObjectIsBlock(void *object) {
   Class blockClass = _BlockClass();
-  
+
   Class candidate = object_getClass((__bridge id)object);
   return [candidate isSubclassOfClass:blockClass];
 }
