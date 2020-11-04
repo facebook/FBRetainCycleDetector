@@ -19,6 +19,7 @@ enum { // Flags from BlockLiteral
   BLOCK_IS_GLOBAL =         (1 << 28),
   BLOCK_HAS_STRET =         (1 << 29), // IFF BLOCK_HAS_SIGNATURE
   BLOCK_HAS_SIGNATURE =     (1 << 30),
+  BLOCK_HAS_EXTENDED_LAYOUT=(1 << 31)  // compiler
 };
 
 struct BlockDescriptor {
@@ -28,6 +29,7 @@ struct BlockDescriptor {
   void (*copy_helper)(void *dst, void *src); // IFF (1<<25)
   void (*dispose_helper)(void *src);         // IFF (1<<25)
   const char *signature;                     // IFF (1<<30)
+  const char *layout;                        // IFF (1<<31)
 };
 
 struct BlockLiteral {
