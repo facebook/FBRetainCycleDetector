@@ -13,6 +13,8 @@
 		74C01575205943710020B6F0 /* rcd_fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 74C01571205943710020B6F0 /* rcd_fishhook.h */; };
 		75069AAE1CD6AEF9001AFCEE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75069AAD1CD6AEF9001AFCEE /* UIKit.framework */; };
 		750866201CD6E387007CD157 /* BaseType.h in Headers */ = {isa = PBXBuildFile; fileRef = 7508661F1CD6E387007CD157 /* BaseType.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		75AEEF94255C261B001F034D /* FBBlockStrongLayout2.h in Headers */ = {isa = PBXBuildFile; fileRef = 75AEEF92255C261B001F034D /* FBBlockStrongLayout2.h */; };
+		75AEEF95255C261B001F034D /* FBBlockStrongLayout2.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75AEEF93255C261B001F034D /* FBBlockStrongLayout2.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		75BDB3771C80E64100FD53A9 /* FBObjectGraphConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75BDB3781C80E64100FD53A9 /* FBObjectGraphConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BDB3761C80E64100FD53A9 /* FBObjectGraphConfiguration.m */; };
 		75BF0E2C1C5ADCA200E0DAB6 /* FBRetainCycleDetector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75BF0E181C5ADBCC00E0DAB6 /* FBRetainCycleDetector.framework */; };
@@ -62,7 +64,7 @@
 		75BF0EB11C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */; };
 		75BF0EB21C5ADE1B00E0DAB6 /* FBClassStrongLayoutTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA61C5ADE1B00E0DAB6 /* FBClassStrongLayoutTests.mm */; };
 		75BF0EB31C5ADE1B00E0DAB6 /* FBGraphEdgeFilterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA71C5ADE1B00E0DAB6 /* FBGraphEdgeFilterTests.m */; };
-		75BF0EB41C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.m */; };
+		75BF0EB41C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.mm */; };
 		75BF0EB51C5ADE1B00E0DAB6 /* FBObjectiveCNSCFTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EA91C5ADE1B00E0DAB6 /* FBObjectiveCNSCFTimerTests.m */; };
 		75BF0EB61C5ADE1B00E0DAB6 /* FBObjectiveCObjectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EAA1C5ADE1B00E0DAB6 /* FBObjectiveCObjectTests.m */; };
 		75BF0EB71C5ADE1B00E0DAB6 /* FBRCDCollectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75BF0EAB1C5ADE1B00E0DAB6 /* FBRCDCollectionTests.m */; };
@@ -87,6 +89,9 @@
 		74C01571205943710020B6F0 /* rcd_fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rcd_fishhook.h; sourceTree = "<group>"; };
 		75069AAD1CD6AEF9001AFCEE /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		7508661F1CD6E387007CD157 /* BaseType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseType.h; sourceTree = "<group>"; };
+		75AEEF8A255C242A001F034D /* Block_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Block_private.h; sourceTree = "<group>"; };
+		75AEEF92255C261B001F034D /* FBBlockStrongLayout2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FBBlockStrongLayout2.h; sourceTree = "<group>"; };
+		75AEEF93255C261B001F034D /* FBBlockStrongLayout2.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockStrongLayout2.mm; sourceTree = "<group>"; };
 		75BDB3751C80E64100FD53A9 /* FBObjectGraphConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBObjectGraphConfiguration.h; sourceTree = "<group>"; };
 		75BDB3761C80E64100FD53A9 /* FBObjectGraphConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectGraphConfiguration.m; sourceTree = "<group>"; };
 		75BF0E181C5ADBCC00E0DAB6 /* FBRetainCycleDetector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FBRetainCycleDetector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -139,7 +144,7 @@
 		75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBBlockStrongLayoutTests.mm; sourceTree = "<group>"; };
 		75BF0EA61C5ADE1B00E0DAB6 /* FBClassStrongLayoutTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBClassStrongLayoutTests.mm; sourceTree = "<group>"; };
 		75BF0EA71C5ADE1B00E0DAB6 /* FBGraphEdgeFilterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBGraphEdgeFilterTests.m; sourceTree = "<group>"; };
-		75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCBlockTests.m; sourceTree = "<group>"; };
+		75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FBObjectiveCBlockTests.mm; sourceTree = "<group>"; };
 		75BF0EA91C5ADE1B00E0DAB6 /* FBObjectiveCNSCFTimerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCNSCFTimerTests.m; sourceTree = "<group>"; };
 		75BF0EAA1C5ADE1B00E0DAB6 /* FBObjectiveCObjectTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBObjectiveCObjectTests.m; sourceTree = "<group>"; };
 		75BF0EAB1C5ADE1B00E0DAB6 /* FBRCDCollectionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBRCDCollectionTests.m; sourceTree = "<group>"; };
@@ -222,7 +227,7 @@
 				75BF0EA51C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm */,
 				75BF0EA61C5ADE1B00E0DAB6 /* FBClassStrongLayoutTests.mm */,
 				75BF0EA71C5ADE1B00E0DAB6 /* FBGraphEdgeFilterTests.m */,
-				75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.m */,
+				75BF0EA81C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.mm */,
 				75BF0EA91C5ADE1B00E0DAB6 /* FBObjectiveCNSCFTimerTests.m */,
 				75BF0EAA1C5ADE1B00E0DAB6 /* FBObjectiveCObjectTests.m */,
 				75BF0EAB1C5ADE1B00E0DAB6 /* FBRCDCollectionTests.m */,
@@ -325,6 +330,9 @@
 				75BF0E581C5ADD3100E0DAB6 /* FBBlockStrongLayout.m */,
 				75BF0E591C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h */,
 				75BF0E5A1C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.m */,
+				75AEEF8A255C242A001F034D /* Block_private.h */,
+				75AEEF92255C261B001F034D /* FBBlockStrongLayout2.h */,
+				75AEEF93255C261B001F034D /* FBBlockStrongLayout2.mm */,
 			);
 			path = Blocks;
 			sourceTree = "<group>";
@@ -386,6 +394,7 @@
 				75BF0E8F1C5ADD3100E0DAB6 /* Struct.h in Headers */,
 				75BF0E931C5ADD3100E0DAB6 /* FBStructEncodingParser.h in Headers */,
 				75BF0E911C5ADD3100E0DAB6 /* Type.h in Headers */,
+				75AEEF94255C261B001F034D /* FBBlockStrongLayout2.h in Headers */,
 				75BF0E821C5ADD3100E0DAB6 /* FBObjectiveCGraphElement+Internal.h in Headers */,
 				75BF0E721C5ADD3100E0DAB6 /* FBRetainCycleDetector+Internal.h in Headers */,
 				75BF0E891C5ADD3100E0DAB6 /* FBBlockStrongRelationDetector.h in Headers */,
@@ -464,6 +473,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 75BF0E0E1C5ADBCC00E0DAB6;
@@ -521,6 +531,7 @@
 				75BF0E961C5ADD3100E0DAB6 /* FBIvarReference.m in Sources */,
 				75BF0E7D1C5ADD3100E0DAB6 /* FBObjectiveCBlock.m in Sources */,
 				75BF0E7F1C5ADD3100E0DAB6 /* FBObjectiveCGraphElement.mm in Sources */,
+				75AEEF95255C261B001F034D /* FBBlockStrongLayout2.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,7 +547,7 @@
 				75BF0EB51C5ADE1B00E0DAB6 /* FBObjectiveCNSCFTimerTests.m in Sources */,
 				75BF0EB31C5ADE1B00E0DAB6 /* FBGraphEdgeFilterTests.m in Sources */,
 				75BF0EB61C5ADE1B00E0DAB6 /* FBObjectiveCObjectTests.m in Sources */,
-				75BF0EB41C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.m in Sources */,
+				75BF0EB41C5ADE1B00E0DAB6 /* FBObjectiveCBlockTests.mm in Sources */,
 				75BF0EB11C5ADE1B00E0DAB6 /* FBBlockStrongLayoutTests.mm in Sources */,
 				75BF0EB21C5ADE1B00E0DAB6 /* FBClassStrongLayoutTests.mm in Sources */,
 			);

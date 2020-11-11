@@ -76,7 +76,7 @@ static NSIndexSet *_GetBlockStrongLayout(void *block) {
   return layout;
 }
 
-NSArray *FBGetBlockStrongReferences(void *block) {
+NSArray *FBGetBlockStrongReferencesV2(void *block) {
   if (!FBObjectIsBlock(block)) {
     return nil;
   }
