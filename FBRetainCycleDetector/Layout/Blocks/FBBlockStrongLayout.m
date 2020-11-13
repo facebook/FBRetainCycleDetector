@@ -86,12 +86,31 @@ NSArray *FBGetBlockStrongReferences(void *block) {
     struct BlockLiteral *blockLiteral = block;
 
     if (!(blockLiteral->flags & BLOCK_HAS_EXTENDED_LAYOUT) ||
-        !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE) ||
-        !(blockLiteral->flags & BLOCK_HAS_SIGNATURE)) return results;
+        !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE)) return results;
 
-    int strongReferenceCount = ((int)blockLiteral->descriptor->layout & 0xF00) >> 8;
+    // If the layout field is less than 0x1000, then it is a compact encoding
+    // of the form 0xXYZ: X strong pointers, then Y byref pointers,
+    // then Z weak pointers.
+
+    // If the layout field is 0x1000 or greater, it points to a
+    // string of layout bytes. Each byte is of the form 0xPN.
+    // Operator P is from the list below. Value N is a parameter for the operator.
+    // Byte 0x00 terminates the layout; remaining block data is non-pointer bytes.
+
+    const char *layout = blockLiteral->descriptor->layout;
+    int strongReferenceCount = 0;
+    if ((int)layout < 0x1000) {
+        strongReferenceCount = ((int)layout & 0xF00) >> 8;
+    } else {
+        for (int i = 0; layout[i] != '\0'; i++) {
+            int p = (layout[i] & 0xF0) >> 4;
+            if (p == BLOCK_LAYOUT_STRONG) {
+                strongReferenceCount = (layout[i] & 0x0F) + 1;
+            }
+        }
+    }
+
     if (!strongReferenceCount) return results;
-
     void *desc = (uint8_t *)block + sizeof(*blockLiteral);
     for (int i = 0; i < strongReferenceCount; i++, desc += sizeof(void *)) {
         id strongRef = (__bridge id)(*((void **)desc));
