@@ -98,23 +98,41 @@ NSArray *FBGetBlockStrongReferences(void *block) {
     // Byte 0x00 terminates the layout; remaining block data is non-pointer bytes.
 
     const char *layout = blockLiteral->descriptor->layout;
+    
     int strongReferenceCount = 0;
+    int byrefReferenceCount = 0;
     if ((int)layout < 0x1000) {
         strongReferenceCount = ((int)layout & 0xF00) >> 8;
+        byrefReferenceCount = ((int)layout & 0x0F0) >> 4;
     } else {
         for (int i = 0; layout[i] != '\0'; i++) {
             int p = (layout[i] & 0xF0) >> 4;
             if (p == BLOCK_LAYOUT_STRONG) {
                 strongReferenceCount = (layout[i] & 0x0F) + 1;
+            } else if (p == BLOCK_LAYOUT_BYREF) {
+                byrefReferenceCount = (layout[i] & 0x0F) + 1;
             }
         }
     }
 
-    if (!strongReferenceCount) return results;
     void *desc = (uint8_t *)block + sizeof(*blockLiteral);
-    for (int i = 0; i < strongReferenceCount; i++, desc += sizeof(void *)) {
-        id strongRef = (__bridge id)(*((void **)desc));
-        [results addObject:strongRef];
+    
+    if (strongReferenceCount) {
+        for (int i = 0; i < strongReferenceCount; i++, desc += sizeof(void *)) {
+            id strongRef = (__bridge id)(*((void **)desc));
+            if (strongRef) [results addObject:strongRef];
+        }
+    }
+    
+    if (byrefReferenceCount) {
+        for (int i = 0; i < byrefReferenceCount; i++, desc += sizeof(void *)) {
+            struct Block_byref *blockByref = (struct Block_byref *)(*((void **)desc));
+            if (blockByref->flags && BLOCK_BYREF_HAS_COPY_DISPOSE) {
+                void *byrefDesc = (uint8_t *)blockByref + sizeof(*blockByref);
+                id strongRef = (__bridge id)(*((void **)byrefDesc));
+                if (strongRef) [results addObject:strongRef];
+            }
+        }
     }
 
     return results;

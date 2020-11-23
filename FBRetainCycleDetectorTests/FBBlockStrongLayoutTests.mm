@@ -104,15 +104,21 @@
   XCTAssertEqual([retainedObjects count], 0);
 }
 
+#define newObject(A) NSObject *object##A = [NSObject new]
+#define __blockNewObject(A) __block NSObject *object##A = [NSObject new]
+#define useObject(A) __unused NSObject *someObject##A = object##A
+#define assertObject(A) XCTAssertEqualObjects(retainedObjects[A], object##A);
+
 - (void)testBlockRetains15StrongReferences
 {
-#define newObject(A) NSObject *object##A = [NSObject new]
+
     newObject(0); newObject(1); newObject(2); newObject(3);
     newObject(4); newObject(5); newObject(6); newObject(7);
-    newObject(8); newObject(9); newObject(10); newObject(11);
-    newObject(12); newObject(13); newObject(14);
+    
+    __blockNewObject(8); __blockNewObject(9); __blockNewObject(10); __blockNewObject(11);
+    __blockNewObject(12); __blockNewObject(13); __blockNewObject(14);
 
-#define useObject(A) __unused NSObject *someObject##A = object##A
+
     void (^block)() = ^{
         useObject(0); useObject(1); useObject(2); useObject(3);
         useObject(4); useObject(5); useObject(6); useObject(7);
@@ -132,13 +138,12 @@
 
 - (void)testBlockRetainsMoreThan15StrongReferences
 {
-#define newObject(A) NSObject *object##A = [NSObject new]
     newObject(0); newObject(1); newObject(2); newObject(3);
     newObject(4); newObject(5); newObject(6); newObject(7);
-    newObject(8); newObject(9); newObject(10); newObject(11);
-    newObject(12); newObject(13); newObject(14); newObject(15);
+    
+    __blockNewObject(8); __blockNewObject(9); __blockNewObject(10); __blockNewObject(11);
+    __blockNewObject(12); __blockNewObject(13); __blockNewObject(14); __blockNewObject(15);
 
-#define useObject(A) __unused NSObject *someObject##A = object##A
     void (^block)() = ^{
         useObject(0); useObject(1); useObject(2); useObject(3);
         useObject(4); useObject(5); useObject(6); useObject(7);
@@ -148,8 +153,6 @@
 
     NSArray *retainedObjects = FBGetBlockStrongReferences((__bridge void *)(block));
     XCTAssertEqual([retainedObjects count], 16);
-
-#define assertObject(A) XCTAssertEqualObjects(retainedObjects[A], object##A);
 
     assertObject(0); assertObject(1); assertObject(2); assertObject(3);
     assertObject(4); assertObject(5); assertObject(6); assertObject(7);

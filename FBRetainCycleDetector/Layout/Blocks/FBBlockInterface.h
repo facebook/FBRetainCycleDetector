@@ -41,6 +41,25 @@ enum {
     BLOCK_LAYOUT_UNUSED_F         = 0xF,  // unspecified, reserved
 };
 
+// Values for Block_byref->flags to describe __block variables
+enum {
+    // Byref refcount must use the same bits as Block_layout's refcount.
+    // BLOCK_DEALLOCATING =      (0x0001),  // runtime
+    // BLOCK_REFCOUNT_MASK =     (0xfffe),  // runtime
+
+    BLOCK_BYREF_LAYOUT_MASK =       (0xf << 28), // compiler
+    BLOCK_BYREF_LAYOUT_EXTENDED =   (  1 << 28), // compiler
+    BLOCK_BYREF_LAYOUT_NON_OBJECT = (  2 << 28), // compiler
+    BLOCK_BYREF_LAYOUT_STRONG =     (  3 << 28), // compiler
+    BLOCK_BYREF_LAYOUT_WEAK =       (  4 << 28), // compiler
+    BLOCK_BYREF_LAYOUT_UNRETAINED = (  5 << 28), // compiler
+
+    BLOCK_BYREF_IS_GC =             (  1 << 27), // runtime
+
+    BLOCK_BYREF_HAS_COPY_DISPOSE =  (  1 << 25), // compiler
+    BLOCK_BYREF_NEEDS_FREE =        (  1 << 24), // runtime
+};
+
 struct BlockDescriptor {
   unsigned long int reserved;                // NULL
   unsigned long int size;
@@ -58,4 +77,13 @@ struct BlockLiteral {
   void (*invoke)(void *, ...);
   struct BlockDescriptor *descriptor;
   // imported variables
+};
+
+struct Block_byref {
+    void *isa;
+    struct Block_byref *forwarding;
+    volatile int32_t flags; // contains ref count
+    uint32_t size;
+    void (*keep_helper)(void *dst, void *src);
+    void (*destory_helper)(void *src);
 };
