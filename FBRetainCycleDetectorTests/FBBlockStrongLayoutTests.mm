@@ -129,7 +129,6 @@
     NSArray *retainedObjects = FBGetBlockStrongReferences((__bridge void *)(block));
     XCTAssertEqual([retainedObjects count], 15);
 
-#define assertObject(A) XCTAssertEqualObjects(retainedObjects[A], object##A);
     assertObject(0); assertObject(1); assertObject(2); assertObject(3);
     assertObject(4); assertObject(5); assertObject(6); assertObject(7);
     assertObject(8); assertObject(9); assertObject(10); assertObject(11);
