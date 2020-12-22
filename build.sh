@@ -7,6 +7,6 @@ set -eu
 
 xcodebuild -project FBRetainCycleDetector.xcodeproj \
            -scheme FBRetainCycleDetector \
-           -destination "platform=iOS Simulator,name=iPhone 6s" \
+           -destination "platform=iOS Simulator,name=iPhone 8" \
            -sdk iphonesimulator \
            build test
