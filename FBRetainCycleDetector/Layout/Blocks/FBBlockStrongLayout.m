@@ -105,7 +105,7 @@ NSArray *FBGetBlockStrongReferences(void *block) {
         strongReferenceCount = ((int)layout & 0xF00) >> 8;
         byrefReferenceCount = ((int)layout & 0x0F0) >> 4;
     } else {
-        for (int i = 0; layout[i] != '\0'; i++) {
+        for (int i = 0; layout[i] != 0x00; i++) {
             int p = (layout[i] & 0xF0) >> 4;
             if (p == BLOCK_LAYOUT_STRONG) {
                 strongReferenceCount += (layout[i] & 0x0F) + 1;
