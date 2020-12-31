@@ -127,7 +127,7 @@ NSArray *FBGetBlockStrongReferences(void *block) {
     if (byrefReferenceCount) {
         for (int i = 0; i < byrefReferenceCount; i++, desc += sizeof(void *)) {
             struct Block_byref *blockByref = (struct Block_byref *)(*((void **)desc));
-            if (blockByref->flags && BLOCK_BYREF_HAS_COPY_DISPOSE) {
+            if ((blockByref->flags & BLOCK_BYREF_HAS_COPY_DISPOSE) && (blockByref->flags & BLOCK_BYREF_LAYOUT_STRONG)) {
                 void *byrefDesc = (uint8_t *)blockByref + sizeof(*blockByref);
                 id strongRef = (__bridge id)(*((void **)byrefDesc));
                 if (strongRef) [results addObject:strongRef];
