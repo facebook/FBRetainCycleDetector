@@ -1,8 +1,8 @@
 # FBRetainCycleDetector
-[![Build Status](https://travis-ci.org/facebook/FBRetainCycleDetector.svg?branch=master)](https://travis-ci.org/facebook/FBRetainCycleDetector)
+[![Build Status](https://travis-ci.org/facebook/FBRetainCycleDetector.svg?branch=main)](https://travis-ci.org/facebook/FBRetainCycleDetector)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![CocoaPods](https://img.shields.io/cocoapods/v/FBRetainCycleDetector.svg)](https://cocoapods.org/pods/FBRetainCycleDetector)
-[![License](https://img.shields.io/cocoapods/l/FBRetainCycleDetector.svg)](https://github.com/facebook/FBRetainCycledetector/blob/master/LICENSE)
+[![License](https://img.shields.io/cocoapods/l/FBRetainCycleDetector.svg)](https://github.com/facebook/FBRetainCycledetector/blob/main/LICENSE)
 
 An iOS library that finds retain cycles using runtime analysis.
 
@@ -15,11 +15,11 @@ The features of this project were influenced by [Circle](https://github.com/mike
 
 ### Carthage
 
-To your Cartfile add: 
+To your Cartfile add:
 
     github "facebook/FBRetainCycleDetector"
 
-`FBRetainCycleDetector` is built out from non-debug builds, so when you want to test it, use 
+`FBRetainCycleDetector` is built out from non-debug builds, so when you want to test it, use
 
     carthage update --configuration Debug
 
@@ -29,7 +29,7 @@ To your podspec add:
 
     pod 'FBRetainCycleDetector'
 
-You'll be able to use `FBRetainCycleDetector` fully only in `Debug` builds. This is controlled by [compilation flag](https://github.com/facebook/FBRetainCycleDetector/blob/master/FBRetainCycleDetector/Detector/FBRetainCycleDetector.h#L83) that can be provided to the build to make it work in other configurations.
+You'll be able to use `FBRetainCycleDetector` fully only in `Debug` builds. This is controlled by [compilation flag](https://github.com/facebook/FBRetainCycleDetector/blob/main/FBRetainCycleDetector/Detector/FBRetainCycleDetector.h#L83) that can be provided to the build to make it work in other configurations.
 
 ## Example usage
 
@@ -46,7 +46,7 @@ NSSet *retainCycles = [detector findRetainCycles];
 NSLog(@"%@", retainCycles);
 ```
 
-`- (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)findRetainCycles` will return a set of arrays of wrapped objects. It's pretty hard to look at at first, but let's go through it. Every array in this set will represent one retain cycle. Every element in this array is a wrapper around one object in this retain cycle. Check [FBObjectiveCGraphElement](https://github.com/facebook/FBRetainCycleDetector/blob/master/FBRetainCycleDetector/Graph/FBObjectiveCGraphElement.h).
+`- (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)findRetainCycles` will return a set of arrays of wrapped objects. It's pretty hard to look at at first, but let's go through it. Every array in this set will represent one retain cycle. Every element in this array is a wrapper around one object in this retain cycle. Check [FBObjectiveCGraphElement](https://github.com/facebook/FBRetainCycleDetector/blob/main/FBRetainCycleDetector/Graph/FBObjectiveCGraphElement.h).
 
 Example output could look like this:
 ```
