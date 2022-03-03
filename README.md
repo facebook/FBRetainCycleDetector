@@ -1,4 +1,5 @@
 # FBRetainCycleDetector
+[![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
 [![Build Status](https://travis-ci.org/facebook/FBRetainCycleDetector.svg?branch=main)](https://travis-ci.org/facebook/FBRetainCycleDetector)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![CocoaPods](https://img.shields.io/cocoapods/v/FBRetainCycleDetector.svg)](https://cocoapods.org/pods/FBRetainCycleDetector)
