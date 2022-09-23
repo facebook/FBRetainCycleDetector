@@ -17,7 +17,7 @@ extern "C" {
 /**
  Standard filters mostly filters excluding some UIKit references we have caught during testing on some apps.
  */
-NSArray<FBGraphEdgeFilterBlock> *_Nonnull FBGetStandardGraphEdgeFilters();
+NSArray<FBGraphEdgeFilterBlock> *_Nonnull FBGetStandardGraphEdgeFilters(void);
 
 /**
  Helper functions for some typical patterns.
