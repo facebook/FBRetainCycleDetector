@@ -104,7 +104,7 @@ static Class _BlockClass() {
   static dispatch_once_t onceToken;
   static Class blockClass;
   dispatch_once(&onceToken, ^{
-    void (^testBlock)() = [^{} copy];
+    void (^testBlock)(void) = [^{} copy];
     blockClass = [testBlock class];
     while(class_getSuperclass(blockClass) && class_getSuperclass(blockClass) != [NSObject class]) {
       blockClass = class_getSuperclass(blockClass);
