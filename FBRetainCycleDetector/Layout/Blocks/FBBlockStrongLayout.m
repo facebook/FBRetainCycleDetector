@@ -80,7 +80,7 @@ NSArray *FBGetBlockStrongReferences(void *block) {
   if (!FBObjectIsBlock(block)) {
     return nil;
   }
-  
+
   NSMutableArray *results = [NSMutableArray new];
 
   void **blockReference = block;
@@ -100,7 +100,7 @@ NSArray *FBGetBlockStrongReferences(void *block) {
   return [results autorelease];
 }
 
-static Class _BlockClass() {
+static Class _BlockClass(void) {
   static dispatch_once_t onceToken;
   static Class blockClass;
   dispatch_once(&onceToken, ^{
@@ -116,7 +116,7 @@ static Class _BlockClass() {
 
 BOOL FBObjectIsBlock(void *object) {
   Class blockClass = _BlockClass();
-  
+
   Class candidate = object_getClass((__bridge id)object);
   return [candidate isSubclassOfClass:blockClass];
 }

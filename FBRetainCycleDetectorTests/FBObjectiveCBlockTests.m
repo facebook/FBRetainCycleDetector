@@ -14,7 +14,7 @@
 
 #import <FBRetainCycleDetector/FBRetainCycleDetector.h>
 
-typedef void (^_RCDTestBlockType)();
+typedef void (^_RCDTestBlockType)(void);
 
 @interface FBObjectiveCBlockTests : XCTestCase
 @end
