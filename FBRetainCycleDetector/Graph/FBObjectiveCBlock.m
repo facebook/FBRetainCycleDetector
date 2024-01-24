@@ -69,7 +69,11 @@ struct __attribute__((packed)) BlockLiteral {
  */
 - (NSString *)classNameOrNull
 {
+/* @cwt-override FIXME[T168581563]: -Wnullable-to-nonnull-conversion */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullable-to-nonnull-conversion"
   NSString *className = NSStringFromClass([self objectClass]);
+#pragma clang diagnostic pop
   if (!className) {
     className = @"(null)";
   }

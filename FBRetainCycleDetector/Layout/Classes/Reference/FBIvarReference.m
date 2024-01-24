@@ -13,7 +13,11 @@
 - (instancetype)initWithIvar:(Ivar)ivar
 {
   if (self = [super init]) {
+/* @cwt-override FIXME[T168581563]: -Wnullable-to-nonnull-conversion */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullable-to-nonnull-conversion"
     _name = @(ivar_getName(ivar));
+#pragma clang diagnostic pop
     _type = [self _convertEncodingToType:ivar_getTypeEncoding(ivar)];
     _offset = ivar_getOffset(ivar);
     _index = _offset / sizeof(void *);
@@ -68,7 +72,11 @@
 
 - (NSArray<NSString *> *)namePath
 {
+/* @cwt-override FIXME[T168581563]: -Wnullable-to-nonnull-conversion */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullable-to-nonnull-conversion"
   return @[@(ivar_getName(_ivar))];
+#pragma clang diagnostic pop
 }
 
 @end
