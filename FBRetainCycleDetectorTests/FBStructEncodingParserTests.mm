@@ -64,7 +64,7 @@ struct _RCDTestStructWithUnnamedStruct {
 
 @implementation FBStructEncodingTests
 
-- (std::string)_getIvarEncodingByName:(NSString *)ivarName forClass:(Class)aCls
+- (std::string)_getIvarEncodingByName:(nonnull NSString *)ivarName forClass:(Class)aCls
 {
   unsigned int count;
   Ivar *ivars = class_copyIvarList(aCls, &count);
@@ -73,7 +73,8 @@ struct _RCDTestStructWithUnnamedStruct {
 
   for (unsigned int i = 0; i < count; ++i) {
     Ivar ivar = ivars[i];
-    if ([@(ivar_getName(ivar)) isEqualToString:ivarName]) {
+    const char *ivarNameCString = ivar_getName(ivar);
+    if (ivarNameCString != nil && [@(ivarNameCString) isEqualToString:ivarName]) {
       typeEncoding = std::string(ivar_getTypeEncoding(ivar));
       break;
     }
@@ -180,7 +181,7 @@ struct _RCDTestStructWithUnnamedStruct {
   std::shared_ptr<FB::RetainCycleDetector::Parser::Struct> innerStruct =
   std::dynamic_pointer_cast<FB::RetainCycleDetector::Parser::Struct>(parsedStruct.typesContainedInStruct[1]);
   XCTAssertTrue(innerStruct);
-  
+
   std::vector<std::string> expectedNamePath = {
     "_RCDTestStructWithNestedStruct",
     "mixingStruct",
@@ -196,13 +197,13 @@ struct _RCDTestStructWithUnnamedStruct {
   XCTAssertTrue(encoding.length() > 0);
   FB::RetainCycleDetector::Parser::Struct parsedStruct =
   FB::RetainCycleDetector::Parser::parseStructEncoding(encoding);
-  
+
   XCTAssertEqual(parsedStruct.typesContainedInStruct.size(), 1);
-  
+
   std::shared_ptr<FB::RetainCycleDetector::Parser::Struct> innerStruct =
   std::dynamic_pointer_cast<FB::RetainCycleDetector::Parser::Struct>(parsedStruct.typesContainedInStruct[0]);
   XCTAssertTrue(innerStruct);
-  
+
   XCTAssertEqual(innerStruct->typesContainedInStruct.size(), 1);
   XCTAssertEqual(innerStruct->typesContainedInStruct[0]->name, "value");
   XCTAssertEqual(innerStruct->typesContainedInStruct[0]->typeEncoding, "B");

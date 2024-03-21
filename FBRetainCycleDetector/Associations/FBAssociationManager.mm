@@ -19,7 +19,6 @@
 #import <vector>
 
 #import "FBAssociationManager+Internal.h"
-#import "FBRetainCycleDetector.h"
 
 #import "rcd_fishhook.h"
 
