@@ -10,7 +10,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FBObjectReference.h"
+#import "FBObjectReferenceWithLayout.h"
 
 typedef NS_ENUM(NSUInteger, FBType) {
   FBObjectType,
@@ -19,7 +19,7 @@ typedef NS_ENUM(NSUInteger, FBType) {
   FBUnknownType,
 };
 
-@interface FBIvarReference : NSObject <FBObjectReference>
+@interface FBIvarReference : NSObject <FBObjectReferenceWithLayout>
 
 @property (nonatomic, copy, readonly, nullable) NSString *name;
 @property (nonatomic, readonly) FBType type;

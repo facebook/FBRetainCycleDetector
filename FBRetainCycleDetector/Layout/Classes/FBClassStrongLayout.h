@@ -12,12 +12,8 @@
 extern "C" {
 #endif
 
+@protocol FBObjectReferenceWithLayout;
 @protocol FBObjectReference;
-/**
- @return An array of id<FBObjectReference> objects that will have *all* references
- the object has (also not retained ivars, structs etc.)
- */
-NSArray<id<FBObjectReference>> *_Nonnull FBGetClassReferences(__unsafe_unretained Class _Nullable aCls);
 
 /**
  @return An array of id<FBObjectReference> objects that will have only those references

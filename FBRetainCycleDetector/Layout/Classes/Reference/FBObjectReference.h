@@ -9,23 +9,15 @@
 #import <Foundation/Foundation.h>
 
 /**
- Defines an outgoing reference from Objective-C object.
+ Defines an outgoing reference.
  */
 
 @protocol FBObjectReference <NSObject>
 
 /**
- What is the index of that reference in ivar layout?
- index * sizeof(void *) gives you offset from the
- beginning of the object.
- */
-- (NSUInteger)indexInIvarLayout;
-
-/**
  For given object we need to be able to grab that object reference.
  */
 - (nullable id)objectReferenceFromObject:(nullable id)object;
-
 
 /**
  For given reference in an object, there can be a path of names that leads to it.

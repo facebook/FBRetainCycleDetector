@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FBObjectReference.h"
+#import "FBObjectReferenceWithLayout.h"
 
 /**
  Struct object is an Objective-C object that is created inside
@@ -17,7 +17,7 @@
  ivar layout for the class.
  */
 
-@interface FBObjectInStructReference : NSObject <FBObjectReference>
+@interface FBObjectInStructReference : NSObject <FBObjectReferenceWithLayout>
 
 - (nonnull instancetype)initWithIndex:(NSUInteger)index
                              namePath:(nullable NSArray<NSString *> *)namePath;
