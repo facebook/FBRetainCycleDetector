@@ -20,7 +20,7 @@ extern "C" {
  that are retained by the object. It also goes through parent classes.
  */
 NSArray<id<FBObjectReference>> *_Nonnull FBGetObjectStrongReferences(id _Nullable obj,
-                                                                     NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *_Nullable layoutCache);
+                                                                     NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *_Nullable layoutCache);
 
 #ifdef __cplusplus
 }

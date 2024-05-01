@@ -9,6 +9,10 @@ import XCTest
  weak var irrelevantObject: NSObject?
 }
 
+class PureSwift {
+ var someObject: Any?
+}
+
 
 class FBRetainCycleDetectorTests: XCTestCase {
 
@@ -47,5 +51,13 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let retainCycles = detector.findRetainCycles();
       XCTAssertEqual(retainCycles.count, 0)
     }
+    
+    func testThatConfigurationCacheSuportSwiftObj() {
+        let configuration = FBObjectGraphConfiguration();
+        let pureSwifObject = PureSwift()
+        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache);
+        XCTAssertEqual(references.count, 0)
+      }
 
 }
+

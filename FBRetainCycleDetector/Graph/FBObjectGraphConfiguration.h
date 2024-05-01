@@ -67,7 +67,7 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 /**
  Will cache layout
  */
-@property (nonatomic, readonly, nullable) NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache;
+@property (nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache;
 @property (nonatomic, readonly) BOOL shouldCacheLayouts;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks

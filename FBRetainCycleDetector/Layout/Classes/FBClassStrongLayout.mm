@@ -184,7 +184,7 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForObjectiveCClass(C
 }
 
 NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
-                                                            NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache) {
+                                                            NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;
@@ -193,14 +193,17 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
   while (previousClass != currentClass) {
     NSArray<id<FBObjectReference>> *ivars;
 
+    const char * className = class_getName(currentClass);
+    NSString *claseName = [[NSString alloc] initWithCString:className encoding:NSUTF8StringEncoding];
+
     if (layoutCache && currentClass) {
-      ivars = layoutCache[currentClass];
+        ivars = layoutCache[claseName];
     }
 
     if (!ivars) {
       ivars = FBGetStrongReferencesForObjectiveCClass(currentClass);
       if (layoutCache && currentClass) {
-        layoutCache[(id<NSCopying>)currentClass] = ivars;
+         layoutCache[claseName] = ivars;
       }
     }
     [array addObjectsFromArray:ivars];
