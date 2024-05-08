@@ -184,7 +184,8 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForObjectiveCClass(C
 }
 
 NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
-                                                            NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache) {
+                                                            NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache,
+                                                            BOOL shouldIncludeSwiftObjects) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;

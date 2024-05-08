@@ -164,98 +164,98 @@ typedef struct {
 
 - (void)testLayoutForEmptyClassWillBeEmpty
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestEmptyClass new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestEmptyClass new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithWeakPropertyWillBeEmpty
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithWeakProperty new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithWeakProperty new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithStrongPropertyWillHaveOneReference
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStrongProperty new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStrongProperty new], nil, false);
 
   XCTAssertEqual([ivars count], 1);
 }
 
 - (void)testLayoutForClassWithMixedStrongAndWeakWillFetchOnlyStrong
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithMixedWeakAndStrongProperties new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithMixedWeakAndStrongProperties new], nil, false);
 
   XCTAssertEqual([ivars count], 4);
 }
 
 - (void)testLayoutForClassSubclassingEmptyClassWillFetchPropertiesProperly
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSimpleInheritance new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSimpleInheritance new], nil,false);
 
   XCTAssertEqual([ivars count], 1);
 }
 
 - (void)testLayoutForClassSubclassingClassWithStrongPropertiesWillFetchParentsClassProperties
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassSubclassingClassWithStrongProperties new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassSubclassingClassWithStrongProperties new], nil,false);
 
   XCTAssertEqual([ivars count], 4);
 }
 
 - (void)testLayoutForClassWithStructAsIvarWillNotCrash
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSimpleStruct new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSimpleStruct new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithStructContainingObjectsWillFetchThoseObjects
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStructContainingObjects new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStructContainingObjects new], nil, false);
 
   XCTAssertEqual([ivars count], 2);
 }
 
 - (void)testLayoutForClassWithStructContainingWeakObjectWillBeEmpty
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStructContainingWeakObject new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithStructContainingWeakObject new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithComplicatedStructWillWorkProperly
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithComplicatedStruct new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithComplicatedStruct new], nil, false);
 
   XCTAssertEqual([ivars count], 5);
 }
 
 - (void)testLayoutForClassWithBitfieldsWillNotCrash
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithBitfieldStructAndStrongProperties new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithBitfieldStructAndStrongProperties new], nil, false);
 
   XCTAssertEqual([ivars count], 2);
 }
 
 - (void)testLayoutForClassWithEnumValueWillNotCrash
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithEnumValue new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithEnumValue new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithSharedPointerWillNotCrash
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSharedPointer new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithSharedPointer new], nil, false);
 
   XCTAssertEqual([ivars count], 0);
 }
 
 - (void)testLayoutForClassWithCppStructAndStrongPropertyWillNotCrashAndFetchStrongProperty
 {
-  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithCppStructAndStrongProperty new], nil);
+  NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithCppStructAndStrongProperty new], nil, false);
 
   XCTAssertEqual([ivars count], 1);
 }

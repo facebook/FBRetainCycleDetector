@@ -55,7 +55,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testThatConfigurationCacheSuportSwiftObj() {
         let configuration = FBObjectGraphConfiguration();
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache);
+        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true);
         XCTAssertEqual(references.count, 0)
       }
 

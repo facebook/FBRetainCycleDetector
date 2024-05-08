@@ -38,7 +38,7 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
  Every block represents a filter that every reference must pass in order to be inspected.
  Reference will be described as relation from one object to another object. See definition of
  FBGraphEdgeFilterBlock above.
- 
+
  Invalid relations would be the relations that we are guaranteed are going to be broken at some point.
  Be careful though, it's not so straightforward to tell if the relation will be broken *with 100%
  certainty*, and if you'll filter out something that could otherwise show retain cycle that leaks -
@@ -65,6 +65,11 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 @property (nonatomic, readonly) BOOL shouldIncludeBlockAddress;
 
 /**
+ To enabled the inclution of swift Objects in the object graph.
+ */
+@property (nonatomic, readonly) BOOL shouldIncludeSwiftObjects;
+
+/**
  Will cache layout
  */
 @property (nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache;
@@ -73,7 +78,13 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                          shouldInspectTimers:(BOOL)shouldInspectTimers
                          transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
-                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress NS_DESIGNATED_INITIALIZER;
+                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
+                         shouldIncludeSwiftObjects:(BOOL) shouldIncludeSwiftObjects NS_DESIGNATED_INITIALIZER;
+
+- (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                         transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
+                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                          shouldInspectTimers:(BOOL)shouldInspectTimers
