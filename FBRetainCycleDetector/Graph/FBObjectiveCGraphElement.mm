@@ -17,6 +17,7 @@
 #import "FBObjectGraphConfiguration.h"
 #import "FBRetainCycleUtils.h"
 #import "FBRetainCycleDetector.h"
+#import "FBClassSwiftHelpers.h"
 
 @protocol FBRetainCycleDetectorCustomClassDescribable
 
@@ -147,6 +148,12 @@
 - (Class)objectClass
 {
   return object_getClass(_object);
+}
+
+- (bool)isSwift
+{
+    Class cls = self.objectClass;
+    return cls != nil && FBIsSwiftObjectOrClass(cls);
 }
 
 @end

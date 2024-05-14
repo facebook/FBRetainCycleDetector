@@ -65,4 +65,9 @@
  */
 - (nonnull NSString *)classNameOrNull;
 
+/**
+ @return return true if it is a swift type class"
+ */
+- (bool)isSwift;
+
 @end
