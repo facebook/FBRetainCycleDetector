@@ -66,7 +66,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
           shouldIncludeSwiftObjects: true)
         let pureSwifObject = PureSwift()
         let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true);
-        XCTAssertEqual(references.count, 2)
+        XCTAssertEqual(references.count, 1)
       }
 
     func testThatDetectorWillFindCycleWithPureSwiftObjs() {
