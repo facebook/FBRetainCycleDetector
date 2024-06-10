@@ -9,6 +9,24 @@ import XCTest
   weak var irrelevantObject: NSObject?
 }
 
+@objc class SwiftAndKVOTestClass: NSObject {
+ @objc public dynamic var someObject: NSObject?
+ var someAny: Any?
+ @objc public dynamic var observer: NSKeyValueObservation?
+
+    init(someObject: NSObject? = nil, someAny: Any? = nil) {
+        self.someObject = someObject
+        self.someAny = someAny
+        super.init()
+        
+        observer = observe(\.someObject, options: [.old, .new], changeHandler: { badgeController, change in
+            print("called after change")
+        })
+        
+    }
+}
+
+
 class FBSwiftReferenceTest: XCTestCase {
   func testObjcObjectsRetainedBySomeObjectWillBeFetched() throws {
     let someObject: NSObject = NSObject()
@@ -55,4 +73,25 @@ class FBSwiftReferenceTest: XCTestCase {
     XCTAssertTrue(retainedObjects!.contains(FBObjectiveCObject(object: someObject, configuration: configuration)))
     XCTAssertTrue(retainedObjects!.contains(FBObjectiveCObject(object: someString, configuration: configuration)))
   }
+    
+    func testSwiftKVOReferences() throws {
+      let someObject: NSObject = NSObject()
+      // KVO need expecial treadment
+        //https://forums.swift.org/t/type-of-vs-object-getclass-difference/59404
+        //https://github.com/apple/swift/pull/16923
+        
+      let testSwiftObj = SwiftAndKVOTestClass(someObject: someObject)
+        
+        let configuration = FBObjectGraphConfiguration(
+          filterBlocks: [],
+          shouldInspectTimers: false,
+          transformerBlock: nil,
+          shouldIncludeBlockAddress: true,
+          shouldIncludeSwiftObjects: true)
+      let object:FBObjectiveCObject = FBObjectiveCObject(object: testSwiftObj, configuration: configuration)
+      let retainedObjects: Set<AnyHashable>? = object.allRetainedObjects()
+
+      XCTAssertTrue(retainedObjects!.contains(FBObjectiveCObject(object: someObject, configuration: configuration)))
+ 
+    }
 }

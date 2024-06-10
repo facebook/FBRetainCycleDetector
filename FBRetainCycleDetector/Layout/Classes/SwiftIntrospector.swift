@@ -7,8 +7,9 @@ import Foundation
     /// Get list of properties, which incluses all Swift superclasses (recurive until we get to a Objective-c superclass)
     /// The Mirror framework doesn't tell us if a property is strong or weak, so we have to use something like `PropertyIntrospection`
     /// Maybe there is a way to use `@_silgen_name` to get non-recursive properties, so we don't need to do this.
-    @objc public class func getPropertiesRecursive(objectClass:AnyClass) -> [PropertyIntrospection] {
-        let introspection = TypeIntrospection(rawValue: objectClass)
+    @objc public class func getPropertiesRecursive(object:Any) -> [PropertyIntrospection] {
+        let typeObj = type(of: object)
+        let introspection = TypeIntrospection(rawValue: typeObj)
         var properties:[PropertyIntrospection] = []
         for property in introspection.properties {
             properties.append(property)

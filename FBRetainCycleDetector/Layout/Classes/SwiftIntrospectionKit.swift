@@ -165,7 +165,7 @@ extension TypeIntrospection.Properties {
 
     @_silgen_name("swift_reflectionMirror_recursiveCount")
     private static func _rawPropertyCount(_in type: Any.Type) -> Int
-    
+
 }
 
 extension TypeIntrospection.Properties: RandomAccessCollection {
@@ -206,7 +206,7 @@ extension TypeIntrospection.Properties: BidirectionalCollection {
 extension TypeIntrospection.Properties: Equatable {
 
     // MARK: Equatable
-    
+
     static func == (_ some: Self, _ other: Self) -> Bool {
         return some.lazy.map(\.id) == other.lazy.map(\.id)
     }
@@ -236,4 +236,3 @@ extension TypeIntrospection {
         Properties(in: self)
     }
 }
-

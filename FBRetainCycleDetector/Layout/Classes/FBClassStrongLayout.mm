@@ -187,9 +187,9 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForObjectiveCClass(C
   return filteredIvars;
 }
 
-static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(Class aCls) {
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(id obj, Class aCls) {
     // This contains all the Swift properties, including of it superclasses (recursive until any Objective-c class)
-    NSArray<PropertyIntrospection *> *const properties = [SwiftIntrospector getPropertiesRecursiveWithObjectClass:aCls];
+    NSArray<PropertyIntrospection *> *const properties = [SwiftIntrospector getPropertiesRecursiveWithObject:obj];
 
     // Since we only want properties for this class, lets create a map and check against `class_copyIvarList`, which isn't recursive
     NSMutableDictionary<NSString *, PropertyIntrospection *> *const propertyMap = [NSMutableDictionary new];
@@ -222,13 +222,13 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(Class 
     return [result copy];
 }
 
-static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(Class aCls, BOOL shouldIncludeSwiftObjects) {
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects) {
     if (aCls == nil) {
         return @[];
     }
     if(shouldIncludeSwiftObjects){
       if (FBIsSwiftObjectOrClass(aCls)) {
-        return FBGetStrongReferencesForSwiftClass(aCls);
+        return FBGetStrongReferencesForSwiftClass(obj, aCls);
       } else {
         return FBGetStrongReferencesForObjectiveCClass(aCls);
       }
@@ -257,7 +257,7 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
     }
 
     if (!ivars) {
-      ivars = FBGetStrongReferencesForClass(currentClass, shouldIncludeSwiftObjects);
+      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects);
       if (layoutCache && currentClass) {
          layoutCache[claseName] = ivars;
       }
