@@ -69,6 +69,12 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
         XCTAssertEqual(references.count, 1)
       }
 
+      func testThatGotReferenceWithNilCache() {
+        let pureSwifObject = PureSwift()
+        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true);
+        XCTAssertEqual(references.count, 1)
+      }
+
     func testThatDetectorWillFindCycleWithPureSwiftObjs() {
       let objA = PureSwift()
       let objB = PureSwift()
@@ -91,16 +97,16 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       // OBJ class
       // swift baked by OBJ
       // pure swift class
-      
+
       let objcObj = RCDObjectWrapperTestClass()
       let objcBackedSwiftObjec = ObjcBackedSwiftObjectWrapperTestClass()
       let pureSwiftObj = PureSwift()
-      
+
 
       objcObj.someObject = objcBackedSwiftObjec
       objcBackedSwiftObjec.someAny = pureSwiftObj
       pureSwiftObj.someObject = objcObj
-        
+
       let configuration = FBObjectGraphConfiguration(
         filterBlocks: [],
         shouldInspectTimers: false,

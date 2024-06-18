@@ -246,21 +246,17 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
   __unsafe_unretained Class previousClass = nil;
   __unsafe_unretained Class currentClass = object_getClass(obj);
 
-  while (previousClass != currentClass) {
+  while (previousClass != currentClass && currentClass) {
     NSArray<id<FBObjectReference>> *ivars;
 
     const char * className = class_getName(currentClass);
     NSString *claseName = [[NSString alloc] initWithCString:className encoding:NSUTF8StringEncoding];
 
-    if (layoutCache && currentClass) {
-        ivars = layoutCache[claseName];
-    }
+    ivars = layoutCache[claseName];
 
     if (!ivars) {
       ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects);
-      if (layoutCache && currentClass) {
-         layoutCache[claseName] = ivars;
-      }
+      layoutCache[claseName] = ivars;
     }
     [array addObjectsFromArray:ivars];
 
