@@ -19,17 +19,30 @@ import Foundation
 
     /// Get the value of the property
     @objc public class func getPropertyValue(object:Any, name:String) -> Any? {
-            let mirror = Mirror(reflecting: object)
-            guard let array = AnyBidirectionalCollection(mirror.children) else {
-                return nil
+        let mirror = Mirror(reflecting: object)
+        var currentMirror: Mirror? = mirror
+        while currentMirror != nil {
+            let (value, found) = getChild(mirror: currentMirror!, name: name)
+            if found {
+                return value
+            } else {
+                // Check parent mirror if present
+                currentMirror = currentMirror?.superclassMirror
             }
-
-            for child in array  {
-                if let label = child.label, label == name {
-                    return child.value
-                }
-            }
+        }
         return nil
      }
 
+    private class func getChild(mirror: Mirror, name: String) -> (Any?, Bool) {
+        guard let array = AnyBidirectionalCollection(mirror.children) else {
+            return (nil, false)
+        }
+
+        for child in array {
+            if let label = child.label, label == name {
+                return (child.value, true)
+            }
+        }
+        return (nil, false)
+    }
 }
