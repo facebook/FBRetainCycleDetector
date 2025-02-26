@@ -13,6 +13,7 @@
 
 #import <FBRetainCycleDetector/FBClassStrongLayout.h>
 #import <FBRetainCycleDetector/FBRetainCycleDetector.h>
+#import <FBRetainCycleDetector/FBObjectReference.h>
 
 @interface _RCDTestEmptyClass : NSObject
 @end
@@ -157,6 +158,22 @@ typedef struct {
 }
 @end
 
+@interface _RCDTestClassWithUnalignEndIvar : NSObject {
+  char content[20];
+}
+@end
+@implementation _RCDTestClassWithUnalignEndIvar
+@end
+
+@interface _RCDTestClassWithUnalignEndIvarParentClass : _RCDTestClassWithUnalignEndIvar {
+  int integer;
+  __weak NSObject *object1;
+  NSObject *object2;
+}
+@end
+@implementation _RCDTestClassWithUnalignEndIvarParentClass
+@end
+
 @interface FBClassStrongLayoutTests : XCTestCase
 @end
 
@@ -258,6 +275,13 @@ typedef struct {
   NSArray *ivars = FBGetObjectStrongReferences([_RCDTestClassWithCppStructAndStrongProperty new], nil, false);
 
   XCTAssertEqual([ivars count], 1);
+}
+
+- (void)testLayoutForClassWithParentClassHasUnalignEndIvar
+{
+  NSArray<id<FBObjectReference>> *ivars = FBGetObjectStrongReferences([_RCDTestClassWithUnalignEndIvarParentClass new], nil);
+  XCTAssertEqual([ivars count], 1);
+  XCTAssertEqualObjects([[ivars firstObject] namePath], @[@"object2"]);
 }
 
 @end
