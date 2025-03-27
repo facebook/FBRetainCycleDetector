@@ -66,7 +66,8 @@ NSArray<FBGraphEdgeFilterBlock> *FBGetStandardGraphEdgeFilters() {
                                                                             @"_warpedIntoView"]]),
            FBFilterBlockWithObjectToManyIvarsRelation(transitionContextClass,
                                                       [NSSet setWithArray:@[@"_toViewController",
-                                                                            @"_fromViewController"]])];
+                                                                            @"_fromViewController"]]),
+           FBFilterBlockWithObjectIvarRelation([UIGestureRecognizer class], @"_gestureEnvironment")];
 #else
   return nil;
 #endif // _INTERNAL_RCD_ENABLED
