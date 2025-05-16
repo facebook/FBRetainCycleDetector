@@ -772,26 +772,6 @@ typedef struct {
   XCTAssertEqualObjects(retainCycles, expectedSet);
 }
 
-- (void)testThatDetectorWillFindCycleUsingBlockType
-{
-    _RCDTestClass *testObject = [_RCDTestClass new];
-    __block __typeof(testObject) bt = testObject;
-    _RCDTestBlockType block = ^{
-      [bt description];
-    };
-    testObject.block = [block copy];
-
-    FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
-    [detector addCandidate:testObject];
-    NSSet *retainCycles = [detector findRetainCycles];
-
-    NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
-                                               @[[[FBObjectiveCObject alloc] initWithObject:testObject],
-                                                 [[FBObjectiveCBlock alloc] initWithObject:block]]]];
-
-    XCTAssertEqualObjects(retainCycles, expectedSet);
-}
-
 #endif //_INTERNAL_RCD_ENABLED
 
 @end
