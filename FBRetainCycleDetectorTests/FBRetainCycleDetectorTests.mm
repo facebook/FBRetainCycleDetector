@@ -503,78 +503,78 @@ typedef struct {
   XCTAssertEqual([retainCycles count], 0);
 }
 
-//- (void)testThatDetectorWillFindCycleBetweenBlockAndObject
-//{
-//  _RCDTestClass *testObject = [_RCDTestClass new];
-//  __block NSObject *unretainedObject;
-//
-//  _RCDTestBlockType block = ^{
-//    unretainedObject = testObject;
-//  };
-//  block = [block copy];
-//  testObject.block = block;
-//
-//  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
-//  [detector addCandidate:testObject];
-//  NSSet *retainCycles = [detector findRetainCycles];
-//
-//  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
-//                                             @[[[FBObjectiveCObject alloc] initWithObject:testObject],
-//                                               [[FBObjectiveCBlock alloc] initWithObject:block]]]];
-//
-//  XCTAssertEqualObjects(retainCycles, expectedSet);
-//}
-//
-//- (void)testThatDetectorWillFindCycleBetweenBlockAndObjectHeldByArray
-//{
-//  _RCDTestClass *testObject = [_RCDTestClass new];
-//  NSArray *array = @[testObject];
-//  __block NSObject *unretainedObject;
-//
-//  _RCDTestBlockType block = ^{
-//    unretainedObject = array;
-//  };
-//  block = [block copy];
-//  testObject.block = block;
-//
-//  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
-//  [detector addCandidate:testObject];
-//  NSSet *retainCycles = [detector findRetainCycles];
-//
-//  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
-//                                             @[[[FBObjectiveCObject alloc] initWithObject:testObject],
-//                                               [[FBObjectiveCBlock alloc] initWithObject:block],
-//                                               [[FBObjectiveCObject alloc] initWithObject:array]]]];
-//
-//  XCTAssertEqualObjects(retainCycles, expectedSet);
-//}
-//
-//- (void)testThatDetectorWillFindCycleIfMultipleBlocksArePartOfIt
-//{
-//  _RCDTestClass *testObject1 = [_RCDTestClass new];
-//  _RCDTestClass *testObject2 = [_RCDTestClass new];
-//
-//  __block NSObject *unretainedObject;
-//
-//  _RCDTestBlockType block1 = ^{unretainedObject = testObject1;};
-//  _RCDTestBlockType block2 = ^{unretainedObject = testObject2;};
-//  block1 = [block1 copy];
-//  block2 = [block2 copy];
-//  testObject1.block = block2;
-//  testObject2.block = block1;
-//
-//  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
-//  [detector addCandidate:block1];
-//  NSSet *retainCycles = [detector findRetainCycles];
-//
-//  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
-//                                             @[[[FBObjectiveCBlock alloc] initWithObject:block1],
-//                                               [[FBObjectiveCObject alloc] initWithObject:testObject1],
-//                                               [[FBObjectiveCBlock alloc] initWithObject:block2],
-//                                               [[FBObjectiveCObject alloc] initWithObject:testObject2]]]];
-//
-//  XCTAssertEqualObjects(retainCycles, expectedSet);
-//}
+- (void)testThatDetectorWillFindCycleBetweenBlockAndObject
+{
+  _RCDTestClass *testObject = [_RCDTestClass new];
+  __block NSObject *unretainedObject;
+
+  _RCDTestBlockType block = ^{
+    unretainedObject = testObject;
+  };
+  block = [block copy];
+  testObject.block = block;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:testObject];
+  NSSet *retainCycles = [detector findRetainCycles];
+
+  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
+                                             @[[[FBObjectiveCObject alloc] initWithObject:testObject],
+                                               [[FBObjectiveCBlock alloc] initWithObject:block]]]];
+
+  XCTAssertEqualObjects(retainCycles, expectedSet);
+}
+
+- (void)testThatDetectorWillFindCycleBetweenBlockAndObjectHeldByArray
+{
+  _RCDTestClass *testObject = [_RCDTestClass new];
+  NSArray *array = @[testObject];
+  __block NSObject *unretainedObject;
+
+  _RCDTestBlockType block = ^{
+    unretainedObject = array;
+  };
+  block = [block copy];
+  testObject.block = block;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:testObject];
+  NSSet *retainCycles = [detector findRetainCycles];
+
+  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
+                                             @[[[FBObjectiveCObject alloc] initWithObject:testObject],
+                                               [[FBObjectiveCBlock alloc] initWithObject:block],
+                                               [[FBObjectiveCObject alloc] initWithObject:array]]]];
+
+  XCTAssertEqualObjects(retainCycles, expectedSet);
+}
+
+- (void)testThatDetectorWillFindCycleIfMultipleBlocksArePartOfIt
+{
+  _RCDTestClass *testObject1 = [_RCDTestClass new];
+  _RCDTestClass *testObject2 = [_RCDTestClass new];
+
+  __block NSObject *unretainedObject;
+
+  _RCDTestBlockType block1 = ^{unretainedObject = testObject1;};
+  _RCDTestBlockType block2 = ^{unretainedObject = testObject2;};
+  block1 = [block1 copy];
+  block2 = [block2 copy];
+  testObject1.block = block2;
+  testObject2.block = block1;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:block1];
+  NSSet *retainCycles = [detector findRetainCycles];
+
+  NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
+                                             @[[[FBObjectiveCBlock alloc] initWithObject:block1],
+                                               [[FBObjectiveCObject alloc] initWithObject:testObject1],
+                                               [[FBObjectiveCBlock alloc] initWithObject:block2],
+                                               [[FBObjectiveCObject alloc] initWithObject:testObject2]]]];
+
+  XCTAssertEqualObjects(retainCycles, expectedSet);
+}
 
 - (void)testThatDetectorWillFindCycleIfParentClassPropertyIsAReasonForCycle
 {
@@ -772,25 +772,25 @@ typedef struct {
   XCTAssertEqualObjects(retainCycles, expectedSet);
 }
 
-//- (void)testThatDetectorWillFindCycleUsingBlockType
-//{
-//    _RCDTestClass *testObject = [_RCDTestClass new];
-//    __block __typeof(testObject) bt = testObject;
-//    _RCDTestBlockType block = ^{
-//      [bt description];
-//    };
-//    testObject.block = [block copy];
-//
-//    FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
-//    [detector addCandidate:testObject];
-//    NSSet *retainCycles = [detector findRetainCycles];
-//
-//    NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
-//                                               @[[[FBObjectiveCObject alloc] initWithObject:testObject],
-//                                                 [[FBObjectiveCBlock alloc] initWithObject:block]]]];
-//
-//    XCTAssertEqualObjects(retainCycles, expectedSet);
-//}
+- (void)testThatDetectorWillFindCycleUsingBlockType
+{
+    _RCDTestClass *testObject = [_RCDTestClass new];
+    __block __typeof(testObject) bt = testObject;
+    _RCDTestBlockType block = ^{
+      [bt description];
+    };
+    testObject.block = [block copy];
+
+    FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+    [detector addCandidate:testObject];
+    NSSet *retainCycles = [detector findRetainCycles];
+
+    NSSet *expectedSet = [NSSet setWithObject:[detector _shiftToUnifiedCycle:
+                                               @[[[FBObjectiveCObject alloc] initWithObject:testObject],
+                                                 [[FBObjectiveCBlock alloc] initWithObject:block]]]];
+
+    XCTAssertEqualObjects(retainCycles, expectedSet);
+}
 
 #endif //_INTERNAL_RCD_ENABLED
 
