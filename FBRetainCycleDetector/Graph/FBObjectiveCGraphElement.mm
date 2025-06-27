@@ -127,8 +127,8 @@
 - (NSString *)classNameOrNull
 {
   NSString *className;
-
-  if (_object && [_object respondsToSelector:@selector(customClassDescription)]) {
+    
+  if (_object && ![_object isProxy] && [_object respondsToSelector:@selector(customClassDescription)]) {
     className = [_object customClassDescription];
   } else {
 /* @cwt-override FIXME[T168581563]: -Wnullable-to-nonnull-conversion */
