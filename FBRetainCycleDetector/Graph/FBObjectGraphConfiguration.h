@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "FBObjectiveCGraphElement.h"
+#import <FBRetainCycleDetector/FBObjectiveCGraphElement.h>
 
 typedef NS_ENUM(NSUInteger, FBGraphEdgeType) {
   FBGraphEdgeValid,
