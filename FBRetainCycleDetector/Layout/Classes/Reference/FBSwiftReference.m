@@ -8,7 +8,7 @@
 
 #import "FBSwiftReference.h"
 
-#import <FBRetainCycleDetector/FBRetainCycleDetector-Swift.h>
+#import "FBRetainCycleDetector-Swift.h"
 
 @implementation FBSwiftReference
 
