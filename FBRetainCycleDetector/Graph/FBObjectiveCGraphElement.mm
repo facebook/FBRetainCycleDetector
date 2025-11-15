@@ -12,6 +12,8 @@
 #import <objc/runtime.h>
 #import <malloc/malloc.h>
 
+#import <FBReport/FBReport.h>
+
 #import "FBAssociationManager.h"
 #import "FBClassStrongLayout.h"
 #import "FBObjectGraphConfiguration.h"
@@ -131,11 +133,7 @@
   if (_object && ![_object isProxy] && [_object respondsToSelector:@selector(customClassDescription)]) {
     className = [_object customClassDescription];
   } else {
-/* @cwt-override FIXME[T168581563]: -Wnullable-to-nonnull-conversion */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnullable-to-nonnull-conversion"
-    className = NSStringFromClass([self objectClass]);
-#pragma clang diagnostic pop
+    className = NSStringFromClass(FBCastNonnullOrReportWarning([self objectClass]));
   }
 
   if (!className) {
