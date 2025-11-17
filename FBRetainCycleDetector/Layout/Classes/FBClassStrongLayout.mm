@@ -151,7 +151,8 @@ static NSUInteger FBGetMinimumIvarIndex(__unsafe_unretained Class aCls) {
   if (count > 0) {
     Ivar ivar = ivars[0];
     ptrdiff_t offset = ivar_getOffset(ivar);
-    minimumIndex = offset / (sizeof(void *));
+    // unaligned bytes at the start of this class's ivars are not represented in the layout bitmap.
+    minimumIndex = (offset + (sizeof(void *) - 1)) / (sizeof(void *));
   }
 
   free(ivars);
