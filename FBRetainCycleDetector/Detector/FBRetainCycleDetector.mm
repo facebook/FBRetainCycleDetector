@@ -23,7 +23,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
 {
   NSMutableArray *_candidates;
   FBObjectGraphConfiguration *_configuration;
-  NSMutableSet *_objectSet;
+  NSHashTable *_objectSet;
 }
 
 - (instancetype)initWithConfiguration:(FBObjectGraphConfiguration *)configuration
@@ -31,7 +31,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   if (self = [super init]) {
     _configuration = configuration;
     _candidates = [NSMutableArray new];
-    _objectSet = [NSMutableSet new];
+    _objectSet = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:kFBRetainCycleDetectorDefaultStackDepth];
   }
 
   return self;
@@ -98,8 +98,8 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   NSMutableArray<FBNodeEnumerator *> *stack = [NSMutableArray new];
 
   // To make the search non-linear we will also keep
-  // a set of previously visited nodes.
-  NSMutableSet<FBNodeEnumerator *> *objectsOnPath = [NSMutableSet new];
+  // a set of previously visited objects that nodes monitor.
+  NSHashTable *objectsOnPath = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:kFBRetainCycleDetectorDefaultStackDepth];
 
   // Let's start with the root
   [stack addObject:wrappedObject];
@@ -111,31 +111,33 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
     @autoreleasepool {
       // Take topmost node in stack and mark it as visited
       FBNodeEnumerator *top = [stack lastObject];
+      // Take object that topmost node monitor
+      __weak id object = top.object.object;
 
       // We don't want to retraverse the same subtree
-      if (![objectsOnPath containsObject:top]) {
-        if ([_objectSet containsObject:@([top.object objectAddress])]) {
+      if (![objectsOnPath containsObject:object]) {
+        if ([_objectSet containsObject:object]) {
           [stack removeLastObject];
           continue;
         }
-        // Add the object address to the set as an NSNumber to avoid
-        // unnecessarily retaining the object
-        [_objectSet addObject:@([top.object objectAddress])];
+
+        [_objectSet addObject:object];
       }
 
-      [objectsOnPath addObject:top];
+      [objectsOnPath addObject:object];
 
       // Take next adjecent node to that child. Wrapper object can
       // persist iteration state. If we see that node again, it will
       // give us new adjacent node unless it runs out of them
       FBNodeEnumerator *firstAdjacent = [top nextObject];
-      if (firstAdjacent) {
+      __weak id firstAdjacentObject = firstAdjacent.object.object;
+      if (firstAdjacentObject) {
         // Current node still has some adjacent not-visited nodes
 
         BOOL shouldPushToStack = NO;
 
         // Check if child was already seen in that path
-        if ([objectsOnPath containsObject:firstAdjacent]) {
+        if ([objectsOnPath containsObject:firstAdjacentObject]) {
           // We have caught a retain cycle
 
           // Ignore the first element which is equal to firstAdjacent, use firstAdjacent
@@ -144,10 +146,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
           NSUInteger index = [stack indexOfObject:firstAdjacent];
           NSInteger length = [stack count] - index;
 
-          if (index == NSNotFound) {
-            // Object got deallocated between checking if it exists and grabbing its index
-            shouldPushToStack = YES;
-          } else {
+          if (firstAdjacentObject) {
             NSRange cycleRange = NSMakeRange(index, length);
             NSMutableArray<FBNodeEnumerator *> *cycle = [[stack subarrayWithRange:cycleRange] mutableCopy];
             [cycle replaceObjectAtIndex:0 withObject:firstAdjacent];
@@ -156,10 +155,10 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
             // 2. Shift to lowest address (if we omit that, and the cycle is created by same class,
             //    we might have duplicates)
             // 3. Shift by class (lexicographically)
-
+          
             [retainCycles addObject:[self _shiftToUnifiedCycle:[self _unwrapCycle:cycle]]];
           }
-        } else {
+        } else if (firstAdjacentObject) {
           // Node is clear to check, add it to stack and continue
           shouldPushToStack = YES;
         }
@@ -172,7 +171,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
       } else {
         // Node has no more adjacent nodes, it itself is done, move on
         [stack removeLastObject];
-        [objectsOnPath removeObject:top];
+        [objectsOnPath removeObject:object];
       }
     }
   }
