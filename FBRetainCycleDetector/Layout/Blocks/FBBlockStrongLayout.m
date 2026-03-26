@@ -18,21 +18,50 @@
 #import "FBBlockStrongRelationDetector.h"
 
 /**
- We will be blackboxing variables that the block holds with our own custom class,
- and we will check which of them were retained.
+ Extract strong references from a block by parsing the block descriptor's
+ layout encoding. The layout field describes which captured variables are
+ strong, weak, byref, etc.
 
- The idea is based on the approach Circle uses:
- https://github.com/mikeash/Circle
- https://github.com/mikeash/Circle/blob/master/Circle/CircleIVarLayout.m
+ The block descriptor is a variable-length structure. Fields after
+ `reserved` and `size` are conditionally present depending on flag bits
+ in the block literal. We must compute the layout field's offset
+ dynamically rather than using a fixed struct member access.
+
+ See: http://clang.llvm.org/docs/Block-ABI-Apple.html
  */
 
-static NSArray *_GetStrongReferencesCompactLayout(struct BlockLiteral *blockLiteral) {
+/**
+ Compute the address of the layout field in the block descriptor.
+ The descriptor has a variable layout:
+   [reserved] [size]                                        -- always
+   [copy_helper] [dispose_helper]                           -- if BLOCK_HAS_COPY_DISPOSE
+   [signature]                                              -- if BLOCK_HAS_SIGNATURE
+   [layout]                                                 -- if BLOCK_HAS_EXTENDED_LAYOUT
+ */
+static const char *_GetBlockDescriptorLayout(struct BlockLiteral *blockLiteral) {
+  uint8_t *desc = (uint8_t *)blockLiteral->descriptor;
+
+  // Skip past reserved and size (always present).
+  desc += sizeof(unsigned long int); // reserved
+  desc += sizeof(unsigned long int); // size
+
+  if (blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE) {
+    desc += sizeof(void *); // copy_helper
+    desc += sizeof(void *); // dispose_helper
+  }
+
+  if (blockLiteral->flags & BLOCK_HAS_SIGNATURE) {
+    desc += sizeof(void *); // signature
+  }
+
+  return *(const char **)desc;
+}
+
+static NSArray *_GetStrongReferencesCompactLayout(struct BlockLiteral *blockLiteral, const char *layout) {
   NSMutableArray *strongReferences = [NSMutableArray array];
 
-  const char *blockLayout = blockLiteral->descriptor->layout;
-
-  int strongReferenceCount = ((uintptr_t)blockLayout & 0xF00) >> 8;
-  int byrefReferenceCount = ((uintptr_t)blockLayout & 0x0F0) >> 4;
+  int strongReferenceCount = ((uintptr_t)layout & 0xF00) >> 8;
+  int byrefReferenceCount = ((uintptr_t)layout & 0x0F0) >> 4;
 
   uintptr_t *storagePointer = (uintptr_t *)((uintptr_t)blockLiteral + sizeof(*blockLiteral));
   if (strongReferenceCount > 0) {
@@ -62,10 +91,9 @@ static NSArray *_GetStrongReferencesCompactLayout(struct BlockLiteral *blockLite
   return strongReferences;
 }
 
-static NSArray *_GetStrongReferencesExtendedLayout(struct BlockLiteral *blockLiteral)
+static NSArray *_GetStrongReferencesExtendedLayout(struct BlockLiteral *blockLiteral, const char *blockLayout)
 {
   NSMutableArray *strongReferences = [NSMutableArray array];
-  const char *blockLayout = blockLiteral->descriptor->layout;
 
   uintptr_t *storagePointer = (uintptr_t *)((uintptr_t)blockLiteral + sizeof(*blockLiteral));
   uintptr_t wordOffset = 0;
@@ -114,19 +142,13 @@ NSArray *FBGetBlockStrongReferences(void *block) {
   if (!(blockLiteral->flags & BLOCK_HAS_EXTENDED_LAYOUT) ||
       !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE)) return results;
   
-  // If the layout field is less than 0x1000, then it is a compact encoding
-  // of the form 0xXYZ: X strong pointers, then Y byref pointers,
-  // then Z weak pointers.
-  
-  // If the layout field is 0x1000 or greater, it points to a
-  // string of layout bytes. Each byte is of the form 0xPN.
-  // Operator P is from the list below. Value N is a parameter for the operator.
-  // Byte 0x00 terminates the layout; remaining block data is non-pointer bytes.
-  const char *layout = blockLiteral->descriptor->layout;
-  if ((int)layout < 0x1000) {
-    return _GetStrongReferencesCompactLayout(blockLiteral);
+  // The layout field's position in the descriptor depends on which optional
+  // fields are present. Compute it dynamically based on flag bits.
+  const char *layout = _GetBlockDescriptorLayout(blockLiteral);
+  if ((uintptr_t)layout < 0x1000) {
+    return _GetStrongReferencesCompactLayout(blockLiteral, layout);
   } else {
-    return _GetStrongReferencesExtendedLayout(blockLiteral);
+    return _GetStrongReferencesExtendedLayout(blockLiteral, layout);
   }
 }
 
