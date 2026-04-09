@@ -138,7 +138,30 @@ static int fbClassifyTypeMetadata(const void *typeMetadata) {
     return fbClassifyTypeMetadata(wrappedType);
   }
 
-  case SWIFT_KIND_STRUCT:
+  case SWIFT_KIND_STRUCT: {
+    // Check the Value Witness Table to determine if this struct is a
+    // single-pointer wrapper around a reference-counted value (e.g.,
+    // Array, Dictionary, Set, or any user struct wrapping a class ref).
+    //
+    // VWT pointer is at metadata[-1] (ABI-defined for value types).
+    // VWT layout: 8 function pointers (64 bytes), then:
+    //   +64: size (size_t)
+    //   +80: flags (uint32_t, bit 16 = IsNonPOD)
+    const void *vwt = ((const void **)typeMetadata)[-1];
+    if (vwt) {
+      size_t typeSize = *(const size_t *)((const char *)vwt + 64);
+      uint32_t flags = *(const uint32_t *)((const char *)vwt + 80);
+      int isNonPOD = (flags & 0x10000) != 0;
+
+      if (typeSize == sizeof(void *) && isNonPOD) {
+        // Pointer-sized struct with reference counting semantics.
+        // The value at the field offset is a strong reference.
+        return FBSwiftABIFieldKindStrongRef;
+      }
+    }
+    return -1;
+  }
+
   case SWIFT_KIND_ENUM:
   case SWIFT_KIND_TUPLE:
   case SWIFT_KIND_METATYPE:
