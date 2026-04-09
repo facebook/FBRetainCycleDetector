@@ -26,6 +26,7 @@
 #import "FBObjectReferenceWithLayout.h"
 #import "FBSwiftReference.h"
 #import "FBSwiftABIReference.h"
+#import "FBSwiftABICaptureReference.h"
 #import "FBSwiftABIHelpers.h"
 
 /**
@@ -231,13 +232,43 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
     if (shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(aCls)) {
         if (shouldUseSwiftABITraversal) {
             FBSwiftABIFieldInfo fields[FB_SWIFT_ABI_MAX_FIELDS];
-            int count = FBGetSwiftABIStrongRefFields((__bridge const void *)aCls, fields, FB_SWIFT_ABI_MAX_FIELDS);
+            int count = FBGetSwiftABIFields((__bridge const void *)aCls, fields, FB_SWIFT_ABI_MAX_FIELDS);
             NSMutableArray<id<FBObjectReference>> *result = [NSMutableArray new];
             for (int i = 0; i < count; i++) {
                 NSString *name = fields[i].name
                     ? [NSString stringWithUTF8String:fields[i].name]
                     : @"<unknown>";
-                [result addObject:[[FBSwiftABIReference alloc] initWithName:name offset:fields[i].offset]];
+                if (fields[i].kind == FBSwiftABIFieldKindStrongRef) {
+                    [result addObject:[[FBSwiftABIReference alloc] initWithName:name offset:fields[i].offset]];
+                } else if (fields[i].kind == FBSwiftABIFieldKindClosure) {
+                    // Read context pointer (second word of the closure field)
+                    const char *objPtr = (const char *)(__bridge const void *)obj;
+                    const void *contextPtr = *(const void **)(objPtr + fields[i].offset + sizeof(void *));
+                    if (contextPtr && !((uintptr_t)contextPtr & 0x7) && malloc_size(contextPtr) > 0) {
+                        const void *contextMeta = *(const void **)contextPtr;
+                        uint64_t contextKind = contextMeta ? *(const uint64_t *)contextMeta : 0;
+
+                        if (contextKind == SWIFT_KIND_HEAP_LOCAL_VARIABLE) {
+                            // Capture box (HeapLocalVariable, kind 0x400) — scan for strong captures
+                            uintptr_t captureOffsets[FB_SWIFT_ABI_MAX_CAPTURES];
+                            int captureCount = FBGetSwiftABICapturedStrongRefs(contextPtr, captureOffsets, FB_SWIFT_ABI_MAX_CAPTURES);
+                            for (int j = 0; j < captureCount; j++) {
+                                NSString *captureName = [NSString stringWithFormat:@"%@->capture[%d]", name, j];
+                                [result addObject:[[FBSwiftABICaptureReference alloc] initWithName:captureName
+                                                                               closureFieldOffset:fields[i].offset
+                                                                                 captureBoxOffset:captureOffsets[j]]];
+                            }
+                        } else if (contextKind == 0 || contextKind > LAST_ENUMERATED_METADATA_KIND) {
+                            // Direct capture — context is a class instance (ABI-defined:
+                            // kind 0 = ObjC class, kind > 0x7FF = Swift class isa pointer).
+                            // Swift uses the captured object directly as the closure context
+                            // when there is a single strong capture.
+                            NSString *captureName = [NSString stringWithFormat:@"%@->capture", name];
+                            [result addObject:[[FBSwiftABIReference alloc] initWithName:captureName
+                                                                                offset:fields[i].offset + sizeof(void *)]];
+                        }
+                    }
+                }
             }
             return [result copy];
         }
@@ -261,11 +292,17 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
     const char * className = class_getName(currentClass);
     NSString *claseName = [[NSString alloc] initWithCString:className encoding:NSUTF8StringEncoding];
 
-    ivars = layoutCache[claseName];
+    // Skip cache for ABI-traversed Swift classes — closure captures are instance-specific
+    BOOL skipCache = shouldUseSwiftABITraversal && shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(currentClass);
+    if (!skipCache) {
+      ivars = layoutCache[claseName];
+    }
 
     if (!ivars) {
       ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects, shouldUseSwiftABITraversal);
-      layoutCache[claseName] = ivars;
+      if (!skipCache && layoutCache && currentClass) {
+        layoutCache[claseName] = ivars;
+      }
     }
     [array addObjectsFromArray:ivars];
 
