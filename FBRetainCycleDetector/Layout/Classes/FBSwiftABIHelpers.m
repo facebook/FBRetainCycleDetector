@@ -42,6 +42,20 @@ typedef struct {
   int32_t FieldName;
 } FBSwiftFieldRecord;
 
+// Struct descriptor — same base layout as class descriptor but with
+// NumFields and FieldOffsetVectorOffset at different offsets.
+// Layout: Flags(+0) Parent(+4) Name(+8) AccessFunction(+12)
+//         FieldDescriptor(+16) NumFields(+20) FieldOffsetVectorOffset(+24)
+typedef struct {
+  uint32_t Flags;
+  int32_t Parent;
+  int32_t Name;
+  int32_t AccessFunction;
+  int32_t FieldDescriptor;
+  uint32_t NumFields;
+  uint32_t FieldOffsetVectorOffset;
+} FBSwiftStructDescriptor;
+
 // CaptureDescriptor — from __swift5_capture / HeapLocalVariableMetadata
 typedef struct {
   uint32_t NumCaptureTypes;
@@ -203,49 +217,131 @@ static int fbMangledNameRawLength(const uint8_t *mangled,
 }
 
 /**
- Resolve a mangled type name (stored as a relative pointer in a field or
- capture record) to type metadata and classify it.
+ Resolve a mangled type name to type metadata and classify it.
+ Optionally returns the resolved metadata pointer via outMetadata.
 
  Returns:
    FBSwiftABIFieldKindStrongRef — strong object reference
    FBSwiftABIFieldKindClosure   — function/closure type
-   0                             — weak or unowned (skip)
+   -2                            — weak or unowned (skip)
    -1                            — value type or unresolvable (skip)
  */
 static int fbResolveAndClassifyType(const void *mangledTypeNameField,
-                                    int32_t relativeOffset) {
+                                    int32_t relativeOffset,
+                                    const void **outMetadata) {
+  if (outMetadata) *outMetadata = NULL;
+
   const uint8_t *mangled =
       (const uint8_t *)fbResolveRelativePointer(mangledTypeNameField, relativeOffset);
   if (!mangled) return -1;
 
-  // Compute raw length and find the last two ASCII character positions
   int secondLastAsciiPos, lastAsciiPos;
   int rawLen = fbMangledNameRawLength(mangled, &secondLastAsciiPos, &lastAsciiPos);
   if (rawLen == 0) return -1;
 
   // Check for weak (Xw) and unowned (Xo) ownership modifiers.
-  // These are always the last two ASCII characters in the mangled name.
   if (lastAsciiPos >= 0 && secondLastAsciiPos >= 0) {
     uint8_t last = mangled[lastAsciiPos];
     uint8_t secondLast = mangled[secondLastAsciiPos];
-    if (secondLast == 'X' && last == 'w') return -2; // weak
-    if (secondLast == 'X' && last == 'o') return -2; // unowned
-
-    // Strip ownership modifiers before resolving (they are storage
-    // qualifiers, not part of the type itself). The resolver does
-    // not understand them.
-    // Note: Xw/Xo are always the final 2 ASCII bytes. If present,
-    // we would have returned above, so no stripping needed here.
+    if (secondLast == 'X' && last == 'w') return -2;
+    if (secondLast == 'X' && last == 'o') return -2;
   }
 
-  // Resolve the mangled type name to type metadata using the Swift runtime.
-  // This handles symbolic references, generic types, and all standard
-  // mangling grammar — no pattern matching needed.
   const void *typeMetadata = swift_getTypeByMangledNameInEnvironment(
       (const char *)mangled, (size_t)rawLen, NULL, NULL);
   if (!typeMetadata) return -1;
 
+  if (outMetadata) *outMetadata = typeMetadata;
   return fbClassifyTypeMetadata(typeMetadata);
+}
+
+/**
+ Recursively walk a struct's fields and collect strong references.
+ baseOffset is the byte offset of this struct within the enclosing object.
+ Returns the number of strong ref fields added to outFields.
+ */
+/**
+ Get the byte offset of field i within a struct.
+ If the metadata has a field offset vector, read from it.
+ Otherwise, compute by walking previous fields' VWT sizes + alignment.
+ */
+static int fbGetStructFieldOffset(const FBSwiftStructDescriptor *structDesc,
+                                  const uintptr_t *metaWords,
+                                  uint32_t fieldIndex,
+                                  uintptr_t *outOffset) {
+  if (structDesc->FieldOffsetVectorOffset != 0) {
+    // Read from the field offset vector in the struct metadata.
+    // FieldOffsetVectorOffset is in pointer-sized words from the metadata start,
+    // but the stored field offsets are uint32_t (not uintptr_t) per Swift ABI.
+    const uint32_t *fieldOffsets =
+        (const uint32_t *)(metaWords + structDesc->FieldOffsetVectorOffset);
+    *outOffset = fieldOffsets[fieldIndex];
+    return 1;
+  }
+
+  // FieldOffsetVectorOffset == 0 means no vector is stored (fixed-layout struct).
+  // This shouldn't happen for structs with reflection metadata in debug builds,
+  // but return failure to be safe.
+  return 0;
+}
+
+static int fbGetStructStrongRefFields(const void *structMetadata,
+                                      uintptr_t baseOffset,
+                                      FBSwiftABIFieldInfo *outFields,
+                                      int maxFields) {
+  if (!structMetadata || maxFields <= 0) return 0;
+
+  const void *descriptor = swift_getTypeContextDescriptor(structMetadata);
+  if (!descriptor) return 0;
+
+  const FBSwiftStructDescriptor *structDesc = (const FBSwiftStructDescriptor *)descriptor;
+  if (structDesc->NumFields == 0) return 0;
+  if (structDesc->FieldDescriptor == 0) return 0;
+
+  const FBSwiftFieldDescriptor *fieldDesc =
+      (const FBSwiftFieldDescriptor *)fbResolveRelativePointer(
+          &structDesc->FieldDescriptor, structDesc->FieldDescriptor);
+  if (!fieldDesc) return 0;
+
+  const uintptr_t *metaWords = (const uintptr_t *)structMetadata;
+  const FBSwiftFieldRecord *records =
+      (const FBSwiftFieldRecord *)((const char *)fieldDesc + sizeof(FBSwiftFieldDescriptor));
+
+  int count = 0;
+  for (uint32_t i = 0; i < structDesc->NumFields && count < maxFields; i++) {
+    const FBSwiftFieldRecord *record = &records[i];
+
+    uintptr_t fieldOffset = 0;
+    if (!fbGetStructFieldOffset(structDesc, metaWords, i, &fieldOffset)) continue;
+
+    const void *fieldTypeMetadata = NULL;
+    int kind = fbResolveAndClassifyType(&record->MangledTypeName,
+                                        record->MangledTypeName,
+                                        &fieldTypeMetadata);
+    if (kind < 0) {
+      if (fieldTypeMetadata && kind == -1) {
+        uintptr_t fieldKind = *(const uintptr_t *)fieldTypeMetadata;
+        if (fieldKind == SWIFT_KIND_STRUCT) {
+          int added = fbGetStructStrongRefFields(fieldTypeMetadata,
+                                                  baseOffset + fieldOffset,
+                                                  outFields + count,
+                                                  maxFields - count);
+          count += added;
+        }
+      }
+      continue;
+    }
+
+    const char *fieldName =
+        (const char *)fbResolveRelativePointer(&record->FieldName, record->FieldName);
+
+    outFields[count].name = fieldName;
+    outFields[count].offset = baseOffset + fieldOffset;
+    outFields[count].kind = (FBSwiftABIFieldKind)kind;
+    count++;
+  }
+
+  return count;
 }
 
 int FBGetSwiftABIFields(const void *classMetadata,
@@ -274,13 +370,30 @@ int FBGetSwiftABIFields(const void *classMetadata,
   for (uint32_t i = 0; i < classDesc->NumFields && count < maxFields; i++) {
     const FBSwiftFieldRecord *record = &records[i];
 
+    const void *fieldTypeMetadata = NULL;
     int kind = fbResolveAndClassifyType(&record->MangledTypeName,
-                                        record->MangledTypeName);
-    if (kind < 0) continue;
+                                        record->MangledTypeName,
+                                        &fieldTypeMetadata);
+
+    uintptr_t fieldOffset = metaWords[classDesc->FieldOffsetVectorOffset + i];
+
+    if (kind < 0) {
+      // Check if this is a struct that we should recurse into
+      if (fieldTypeMetadata && kind == -1) {
+        uintptr_t fieldKind = *(const uintptr_t *)fieldTypeMetadata;
+        if (fieldKind == SWIFT_KIND_STRUCT) {
+          int added = fbGetStructStrongRefFields(fieldTypeMetadata,
+                                                  fieldOffset,
+                                                  outFields + count,
+                                                  maxFields - count);
+          count += added;
+        }
+      }
+      continue;
+    }
 
     const char *fieldName =
         (const char *)fbResolveRelativePointer(&record->FieldName, record->FieldName);
-    uintptr_t fieldOffset = metaWords[classDesc->FieldOffsetVectorOffset + i];
 
     outFields[count].name = fieldName;
     outFields[count].offset = fieldOffset;
@@ -341,7 +454,8 @@ int FBGetSwiftABICapturedStrongRefs(const void *captureBoxPtr,
 
         // Resolve the capture's mangled type to metadata and classify
         int ownership = fbResolveAndClassifyType(&records[i].MangledTypeName,
-                                                 records[i].MangledTypeName);
+                                                 records[i].MangledTypeName,
+                                                 NULL);
         if (ownership < 0 || ownership != FBSwiftABIFieldKindStrongRef) continue;
 
         // Safety: validate the value at this offset is a valid heap pointer
