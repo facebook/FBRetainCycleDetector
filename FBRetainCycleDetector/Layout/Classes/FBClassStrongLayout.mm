@@ -222,25 +222,25 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(id obj
     return [result copy];
 }
 
-static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects) {
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects, BOOL shouldUseSwiftABITraversal) {
     if (aCls == nil) {
         return @[];
     }
-    if(shouldIncludeSwiftObjects){
-      if (FBIsSwiftObjectOrClass(aCls)) {
+    if (shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(aCls)) {
+        if (shouldUseSwiftABITraversal) {
+            // TODO: Implement Swift ABI metadata traversal using class descriptor
+            // and field offset vector instead of Mirror-based SwiftIntrospector.
+            return @[];
+        }
         return FBGetStrongReferencesForSwiftClass(obj, aCls);
-      } else {
-        return FBGetStrongReferencesForObjectiveCClass(aCls);
-      }
-    } else {
-        return FBGetStrongReferencesForObjectiveCClass(aCls);
     }
-
+    return FBGetStrongReferencesForObjectiveCClass(aCls);
 }
 
 NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
                                                             NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache,
-                                                            BOOL shouldIncludeSwiftObjects) {
+                                                            BOOL shouldIncludeSwiftObjects,
+                                                            BOOL shouldUseSwiftABITraversal) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;
@@ -255,7 +255,7 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
     ivars = layoutCache[claseName];
 
     if (!ivars) {
-      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects);
+      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects, shouldUseSwiftABITraversal);
       layoutCache[claseName] = ivars;
     }
     [array addObjectsFromArray:ivars];

@@ -72,13 +72,13 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
           shouldIncludeBlockAddress: true,
           shouldIncludeSwiftObjects: true)
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true);
+        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true, false);
         XCTAssertEqual(references.count, 1)
       }
 
       func testThatGotReferenceWithNilCache() {
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true);
+        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true, false);
         XCTAssertEqual(references.count, 1)
       }
 
