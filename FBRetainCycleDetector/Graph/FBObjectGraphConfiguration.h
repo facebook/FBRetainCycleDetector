@@ -70,6 +70,13 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 @property (nonatomic, readonly) BOOL shouldIncludeSwiftObjects;
 
 /**
+ Use Swift ABI metadata traversal instead of Mirror-based introspection
+ for walking pure Swift object fields. When enabled, uses the Swift class
+ descriptor and field offset vector directly instead of SwiftIntrospector.
+ */
+@property (nonatomic, readonly) BOOL shouldUseSwiftABITraversal;
+
+/**
  Will cache layout
  */
 @property (nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache;
@@ -79,7 +86,14 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
                          shouldInspectTimers:(BOOL)shouldInspectTimers
                          transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
                          shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
-                         shouldIncludeSwiftObjects:(BOOL) shouldIncludeSwiftObjects NS_DESIGNATED_INITIALIZER;
+                         shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects
+                         shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal NS_DESIGNATED_INITIALIZER;
+
+- (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                         transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
+                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
+                         shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                          shouldInspectTimers:(BOOL)shouldInspectTimers
