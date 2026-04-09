@@ -25,6 +25,8 @@
 #import "FBClassSwiftHelpers.h"
 #import "FBObjectReferenceWithLayout.h"
 #import "FBSwiftReference.h"
+#import "FBSwiftABIReference.h"
+#import "FBSwiftABIHelpers.h"
 
 /**
  If we stumble upon a struct, we need to go through it and check if it doesn't retain some objects.
@@ -228,9 +230,16 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
     }
     if (shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(aCls)) {
         if (shouldUseSwiftABITraversal) {
-            // TODO: Implement Swift ABI metadata traversal using class descriptor
-            // and field offset vector instead of Mirror-based SwiftIntrospector.
-            return @[];
+            FBSwiftABIFieldInfo fields[FB_SWIFT_ABI_MAX_FIELDS];
+            int count = FBGetSwiftABIStrongRefFields((__bridge const void *)aCls, fields, FB_SWIFT_ABI_MAX_FIELDS);
+            NSMutableArray<id<FBObjectReference>> *result = [NSMutableArray new];
+            for (int i = 0; i < count; i++) {
+                NSString *name = fields[i].name
+                    ? [NSString stringWithUTF8String:fields[i].name]
+                    : @"<unknown>";
+                [result addObject:[[FBSwiftABIReference alloc] initWithName:name offset:fields[i].offset]];
+            }
+            return [result copy];
         }
         return FBGetStrongReferencesForSwiftClass(obj, aCls);
     }
