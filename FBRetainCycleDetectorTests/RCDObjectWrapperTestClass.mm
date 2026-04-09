@@ -29,3 +29,14 @@
 
 @implementation RCDObjectWrapperTestClassSubclass
 @end
+
+@implementation RCDObjectWrapperWithBlock
+
+- (void)setBlockCapturing:(NSObject *)captured {
+  self.block = ^{
+    // Force a strong capture of the object via a native ObjC block
+    (void)captured;
+  };
+}
+
+@end

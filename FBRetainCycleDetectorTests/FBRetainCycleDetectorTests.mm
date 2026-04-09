@@ -792,6 +792,155 @@ typedef struct {
     XCTAssertEqualObjects(retainCycles, expectedSet);
 }
 
+// MARK: - Additional coverage tests
+
+- (void)testThatNestedBlocksCycleIsDetected
+{
+  // object → block1 → captures block2 → captures object → cycle
+  _RCDTestClass *testObject = [_RCDTestClass new];
+  __block _RCDTestBlockType innerBlock;
+  _RCDTestBlockType outerBlock = [^{
+    innerBlock();
+  } copy];
+  innerBlock = [^{
+    (void)testObject;
+  } copy];
+  testObject.block = [^{
+    innerBlock();
+    outerBlock();
+  } copy];
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:testObject];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertGreaterThan([retainCycles count], 0, @"Nested block chain should form a cycle");
+}
+
+// MARK: - Self-referencing collections
+
+- (void)testThatArrayContainingOwnerCycleIsDetected
+{
+  _RCDTestClass *owner = [_RCDTestClass new];
+  NSMutableArray *array = [NSMutableArray new];
+  [array addObject:owner];
+  owner.object = array;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:owner];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"Array containing owner should form a cycle");
+}
+
+- (void)testThatDictionaryValueCycleIsDetected
+{
+  _RCDTestClass *owner = [_RCDTestClass new];
+  NSMutableDictionary *dict = [NSMutableDictionary new];
+  [dict setObject:owner forKey:@"owner"];
+  owner.object = dict;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:owner];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"Dictionary value retaining owner should form a cycle");
+}
+
+// MARK: - NSHashTable / NSMapTable end-to-end cycles
+
+- (void)testThatNSHashTableStrongCycleIsDetected
+{
+  _RCDTestClass *objA = [_RCDTestClass new];
+  NSHashTable *hashTable = [NSHashTable hashTableWithOptions:NSPointerFunctionsStrongMemory];
+  [hashTable addObject:objA];
+  objA.object = hashTable;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:objA];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"NSHashTable strong → object → NSHashTable should cycle");
+}
+
+- (void)testThatNSMapTableStrongCycleIsDetected
+{
+  _RCDTestClass *objA = [_RCDTestClass new];
+  NSMapTable *mapTable = [NSMapTable strongToStrongObjectsMapTable];
+  [mapTable setObject:objA forKey:@"key"];
+  objA.object = mapTable;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:objA];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"NSMapTable strong → object → NSMapTable should cycle");
+}
+
+// MARK: - __unsafe_unretained excluded
+
+- (void)testThatUnsafeUnretainedDoesNotFormCycle
+{
+  _RCDTestClass *objA = [_RCDTestClass new];
+  _RCDTestClass *objB = [_RCDTestClass new];
+  objA.object = objB;
+  objB.weakObject = objA; // weak reference — should not form cycle
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:objA];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 0, @"Weak back-reference should not form a cycle");
+}
+
+// MARK: - Deep ObjC inheritance chain
+
+- (void)testThatDeepObjCInheritanceChainTraversal
+{
+  // Subclass → set parent's property → cycle via superclass field
+  _RCDTestSubclass *sub = [_RCDTestSubclass new];
+  _RCDTestClass *parent = [_RCDTestClass new];
+  sub.object = parent;
+  parent.object = sub;
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:sub];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"Cycle through inherited property in subclass");
+}
+
+// MARK: - NSTimer with userInfo
+
+- (void)testThatTimerUserInfoCycleIsDetected
+{
+  _RCDTestClass *owner = [_RCDTestClass new];
+  NSTimer *timer = [NSTimer timerWithTimeInterval:1.0
+                                           target:[NSObject new]
+                                         selector:@selector(description)
+                                         userInfo:owner
+                                          repeats:YES];
+  owner.object = timer;
+
+  FBObjectGraphConfiguration *configuration =
+    [[FBObjectGraphConfiguration alloc] initWithFilterBlocks:@[]
+                                         shouldInspectTimers:YES];
+
+  FBRetainCycleDetector *detector =
+    [[FBRetainCycleDetector alloc] initWithConfiguration:configuration];
+  [detector addCandidate:owner];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"Timer userInfo retaining owner should form cycle");
+}
+
+// MARK: - TODO: Tests that need implementation work before they can pass
+//
+// Block-based NSTimer:
+//   [NSTimer scheduledTimerWithTimeInterval:repeats:block:] uses different
+//   internal structure. FBObjectiveCNSCFTimer reads CFRunLoopTimerContext
+//   for target/selector pattern, which doesn't apply to block timers.
+//
+// OBJC_ASSOCIATION_COPY:
+//   Need to verify FBAssociationManager tracks COPY policy associations.
+//
+// Swift closures bridged as ObjC blocks:
+//   When a Swift closure is assigned to a void(^)(void) ObjC property,
+//   the bridge wraps the Swift context, hiding captures from the block
+//   ABI parser. Need to detect Swift contexts inside ObjC block captures.
+
 #endif //_INTERNAL_RCD_ENABLED
 
 @end

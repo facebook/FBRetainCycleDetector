@@ -66,6 +66,45 @@ static const char *strongAssocKey2 = "strong_assoc2";
   XCTAssertEqual([retainCycles count], 0);
 }
 
+- (void)testThatChainedAssociatedObjectsCycleIsDetected
+{
+  static const char *key1 = "chain_assoc1";
+  static const char *key2 = "chain_assoc2";
+
+  NSObject *objA = [NSObject new];
+  NSObject *objB = [NSObject new];
+
+  objc_setAssociatedObject(objA, key1, objB, OBJC_ASSOCIATION_RETAIN);
+  FB::AssociationManager::_threadUnsafeSetStrongAssociation(objA, (void *)key1, objB);
+
+  objc_setAssociatedObject(objB, key2, objA, OBJC_ASSOCIATION_RETAIN);
+  FB::AssociationManager::_threadUnsafeSetStrongAssociation(objB, (void *)key2, objA);
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:objA];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertEqual([retainCycles count], 1, @"Chained associations A→B→A should form cycle");
+}
+
+- (void)testThatAssociatedBlockCapturingHostCycleIsDetected
+{
+  static const char *key = "block_assoc";
+  typedef void (^_TestBlockType)(void);
+
+  NSObject *host = [NSObject new];
+  _TestBlockType block = [^{
+    (void)host;
+  } copy];
+
+  objc_setAssociatedObject(host, key, block, OBJC_ASSOCIATION_RETAIN);
+  FB::AssociationManager::_threadUnsafeSetStrongAssociation(host, (void *)key, block);
+
+  FBRetainCycleDetector *detector = [FBRetainCycleDetector new];
+  [detector addCandidate:host];
+  NSSet *retainCycles = [detector findRetainCycles];
+  XCTAssertGreaterThan([retainCycles count], 0, @"Associated block capturing host should form cycle");
+}
+
 #endif
 
 @end

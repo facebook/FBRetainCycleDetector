@@ -20,3 +20,9 @@
 
 @interface RCDObjectWrapperTestClassSubclass : RCDObjectWrapperTestClass
 @end
+
+@interface RCDObjectWrapperWithBlock : NSObject
+@property (nonatomic, copy) void (^block)(void);
+@property (nonatomic, strong) NSObject *someObject;
+- (void)setBlockCapturing:(NSObject *)captured;
+@end
