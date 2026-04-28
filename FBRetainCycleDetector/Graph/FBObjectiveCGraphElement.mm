@@ -21,6 +21,13 @@
 #import "FBRetainCycleDetector.h"
 #import "FBClassSwiftHelpers.h"
 
+extern "C" char *swift_demangle(
+    const char *mangledName,
+    size_t mangledNameLength,
+    char *outputBuffer,
+    size_t *outputBufferSize,
+    uint32_t flags);
+
 @protocol FBRetainCycleDetectorCustomClassDescribable
 
 - (NSString *)customClassDescription;
@@ -161,8 +168,6 @@
   NSString *className;
 
   if (_unsafeSwiftObject) {
-    // Pure Swift: can't call ObjC methods on the object.
-    // Use class_getName which is safe for Swift classes.
     Class cls = [self objectClass];
     if (cls) {
       const char *name = class_getName(cls);
@@ -176,6 +181,16 @@
 
   if (!className) {
     className = @"(null)";
+  }
+
+  // Demangle Swift class names (e.g. _TtC... → Module.ClassName)
+  const char *cStr = [className UTF8String];
+  if (cStr) {
+    char *demangled = swift_demangle(cStr, strlen(cStr), nullptr, nullptr, 0);
+    if (demangled) {
+      className = [NSString stringWithUTF8String:demangled];
+      free(demangled);
+    }
   }
 
   return className;
