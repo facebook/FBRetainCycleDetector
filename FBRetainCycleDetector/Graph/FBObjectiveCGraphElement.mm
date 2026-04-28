@@ -190,6 +190,16 @@ extern "C" char *swift_demangle(
     if (demangled) {
       className = [NSString stringWithUTF8String:demangled];
       free(demangled);
+
+      // Strip private-type discriminators: "Module.(Foo in _HEX)" → "Module.Foo"
+      NSRegularExpression *regex =
+        [NSRegularExpression regularExpressionWithPattern:@"\\(([\\w.]+) in _[0-9A-Fa-f]+\\)"
+                                                 options:0
+                                                   error:nil];
+      className = [regex stringByReplacingMatchesInString:className
+                                                 options:0
+                                                   range:NSMakeRange(0, className.length)
+                                            withTemplate:@"$1"];
     }
   }
 
