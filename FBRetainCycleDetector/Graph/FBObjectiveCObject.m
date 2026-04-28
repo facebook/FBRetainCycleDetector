@@ -19,17 +19,23 @@
 
 - (NSSet *)allRetainedObjects
 {
-  Class aCls = object_getClass(self.object);
-  if (!self.object || !aCls) {
+  void *ptr = [self objectPtr];
+  if (!ptr) {
+    return nil;
+  }
+  __unsafe_unretained id obj = (__bridge id)ptr;
+
+  Class aCls = object_getClass(obj);
+  if (!aCls) {
     return nil;
   }
 
-  NSArray *strongIvars = FBGetObjectStrongReferences(self.object, self.configuration.layoutCache, self.configuration.shouldIncludeSwiftObjects, self.configuration.shouldUseSwiftABITraversal);
+  NSArray *strongIvars = FBGetObjectStrongReferences(obj, self.configuration.layoutCache, self.configuration.shouldIncludeSwiftObjects, self.configuration.shouldUseSwiftABITraversal);
 
   NSMutableArray *retainedObjects = [[[super allRetainedObjects] allObjects] mutableCopy];
 
   for (id<FBObjectReference> ref in strongIvars) {
-    id referencedObject = [ref objectReferenceFromObject:self.object];
+    id referencedObject = [ref objectReferenceFromObject:obj];
 
     if (referencedObject) {
       NSArray<NSString *> *namePath = [ref namePath];
@@ -77,7 +83,7 @@
       // If collection is mutated we want to rollback and try again - let's keep refs in temporary set
       NSMutableSet *temporaryRetainedObjects = [NSMutableSet new];
       @try {
-        for (id subobject in self.object) {
+        for (id subobject in obj) {
           if (retainsKeys) {
             FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self, subobject, self.configuration);
             if (element) {
@@ -86,7 +92,7 @@
           }
           if (isKeyValued && retainsValues) {
             FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self,
-                                                                         [self.object objectForKey:subobject],
+                                                                         [obj objectForKey:subobject],
                                                                          self.configuration);
             if (element) {
               [temporaryRetainedObjects addObject:element];

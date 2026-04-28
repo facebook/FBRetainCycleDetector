@@ -84,7 +84,7 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   NSMutableSet<NSArray<FBObjectiveCGraphElement *> *> *brokenCycles = [NSMutableSet set];
   for (NSArray<FBObjectiveCGraphElement *> *itemCycle in allRetainCycles) {
     for (FBObjectiveCGraphElement *element in itemCycle) {
-      if (element.object == nil) {
+      if ([element objectPtr] == NULL) {
         // At least one element of the cycle has been removed, thus breaking
         // the cycle.
         [brokenCycles addObject:itemCycle];
