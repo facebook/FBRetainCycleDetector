@@ -12,10 +12,42 @@
 
 #import "FBBlockStrongLayout.h"
 
+#import <malloc/malloc.h>
 #import <objc/runtime.h>
 
 #import "FBBlockInterface.h"
 #import "FBBlockStrongRelationDetector.h"
+
+/**
+ Validate that a raw pointer is safe to bridge to `id` and retain.
+ Blocks may capture non-ObjC heap objects (e.g. Swift closure contexts),
+ and blindly bridging those to `id` causes EXC_BAD_ACCESS in objc_retain.
+
+ Validation chain:
+  1. Non-null
+  2. 8-byte aligned (all heap objects are)
+  3. Non-heap pointers (e.g. global blocks in __DATA) are accepted — Swift
+     capture boxes are always heap-allocated, so malloc_size == 0 is safe.
+  4. For heap-allocated pointers, ISA must resolve to a class in __DATA
+     (malloc_size == 0), not heap-allocated Swift metadata.
+ */
+static BOOL _FBIsRetainableObjCPointer(const void *ptr) {
+  if (!ptr) return NO;
+  if ((uintptr_t)ptr & 0x7) return NO;
+
+  // Non-heap pointers (e.g. global blocks in __DATA) are valid ObjC objects
+  // when they appear as strong captures in a block layout. Swift capture
+  // box metadata — the thing we need to reject — is always heap-allocated.
+  if (malloc_size(ptr) == 0) return YES;
+
+  // Heap-allocated pointer: verify its ISA is a real ObjC class (lives in
+  // __DATA, malloc_size == 0) rather than heap-allocated Swift metadata.
+  Class cls = object_getClass((__bridge id)ptr);
+  if (!cls) return NO;
+  if (malloc_size((void *)cls) > 0) return NO;
+
+  return YES;
+}
 
 /**
  Extract strong references from a block by parsing the block descriptor's
@@ -66,23 +98,25 @@ static NSArray *_GetStrongReferencesCompactLayout(struct BlockLiteral *blockLite
   uintptr_t *storagePointer = (uintptr_t *)((uintptr_t)blockLiteral + sizeof(*blockLiteral));
   if (strongReferenceCount > 0) {
     for (int i = 0; i < strongReferenceCount; i += 1, storagePointer += 1) {
-      id strongRef = (__bridge id)(*((void **)storagePointer));
-      if (strongRef) {
-        [strongReferences addObject:strongRef];
+      void *rawPtr = *((void **)storagePointer);
+      if (rawPtr && _FBIsRetainableObjCPointer(rawPtr)) {
+        [strongReferences addObject:(__bridge id)rawPtr];
       }
     }
   }
 
   if (byrefReferenceCount > 0) {
     for (int i = 0; i < byrefReferenceCount; i += 1, storagePointer += 1) {
-      struct Block_byref *blockByref = (struct Block_byref *)(*((void **)storagePointer));
+      void *rawByref = *((void **)storagePointer);
+      if (!rawByref || malloc_size(rawByref) == 0) continue;
+      struct Block_byref *blockByref = (struct Block_byref *)rawByref;
       BOOL isStrongLayout = (blockByref->flags & BLOCK_BYREF_LAYOUT_MASK) == BLOCK_BYREF_LAYOUT_STRONG;
       BOOL hasCopyDispose = blockByref->flags & BLOCK_BYREF_HAS_COPY_DISPOSE;
       if (hasCopyDispose && isStrongLayout) {
         void *byrefDesc = (uint8_t *)blockByref + sizeof(*blockByref);
-        id strongRef = (__bridge id)(*((void **)byrefDesc));
-        if (strongRef) {
-          [strongReferences addObject:strongRef];
+        void *rawPtr = *((void **)byrefDesc);
+        if (rawPtr && _FBIsRetainableObjCPointer(rawPtr)) {
+          [strongReferences addObject:(__bridge id)rawPtr];
         }
       }
     }
@@ -104,22 +138,24 @@ static NSArray *_GetStrongReferencesExtendedLayout(struct BlockLiteral *blockLit
     if (p == BLOCK_LAYOUT_STRONG) {
       for (int j = 0; j < n; j++) {
         void *ptr = ((uintptr_t *)storagePointer + wordOffset + j);
-        id strongRef = (__bridge id)(*((void **)ptr));
-        if (strongRef) {
-          [strongReferences addObject:strongRef];
+        void *rawPtr = *((void **)ptr);
+        if (rawPtr && _FBIsRetainableObjCPointer(rawPtr)) {
+          [strongReferences addObject:(__bridge id)rawPtr];
         }
       }
     } else if (p == BLOCK_LAYOUT_BYREF) {
       for (int j = 0; j < n; j++) {
         uintptr_t *ptr = ((uintptr_t *)storagePointer + wordOffset + j);
-        struct Block_byref *blockByref = (struct Block_byref *)(*((void **)ptr));
+        void *rawByref = *((void **)ptr);
+        if (!rawByref || malloc_size(rawByref) == 0) continue;
+        struct Block_byref *blockByref = (struct Block_byref *)rawByref;
         BOOL isStrongLayout = (blockByref->flags & BLOCK_BYREF_LAYOUT_MASK) == BLOCK_BYREF_LAYOUT_STRONG;
         BOOL hasCopyDispose = blockByref->flags & BLOCK_BYREF_HAS_COPY_DISPOSE;
         if (hasCopyDispose && isStrongLayout) {
           void *byrefPtr = (uint8_t *)blockByref + sizeof(*blockByref);
-          id strongRef = (__bridge id)(*((void **)byrefPtr));
-          if (strongRef) {
-            [strongReferences addObject:strongRef];
+          void *rawPtr = *((void **)byrefPtr);
+          if (rawPtr && _FBIsRetainableObjCPointer(rawPtr)) {
+            [strongReferences addObject:(__bridge id)rawPtr];
           }
         }
       }
@@ -136,12 +172,12 @@ NSArray *FBGetBlockStrongReferences(void *block) {
   }
 
   NSMutableArray *results = [NSMutableArray new];
-  
+
   struct BlockLiteral *blockLiteral = block;
-  
+
   if (!(blockLiteral->flags & BLOCK_HAS_EXTENDED_LAYOUT) ||
       !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE)) return results;
-  
+
   // The layout field's position in the descriptor depends on which optional
   // fields are present. Compute it dynamically based on flag bits.
   const char *layout = _GetBlockDescriptorLayout(blockLiteral);
