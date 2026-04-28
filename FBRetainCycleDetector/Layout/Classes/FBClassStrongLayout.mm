@@ -35,7 +35,9 @@
 static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar, std::string encoding) {
   NSMutableArray<FBObjectInStructReference *> *references = [NSMutableArray new];
 
-  std::string ivarName = std::string([ivar.name cStringUsingEncoding:NSUTF8StringEncoding]);
+  const char *utf8 = [ivar.name cStringUsingEncoding:NSUTF8StringEncoding];
+  NSCAssert(utf8, @"cStringUsingEncoding returned null");
+  std::string ivarName = std::string(utf8);
   FB::RetainCycleDetector::Parser::Struct parsedStruct =
   FB::RetainCycleDetector::Parser::parseStructEncodingWithName(encoding, ivarName);
 
@@ -112,7 +114,9 @@ static NSArray<id<FBObjectReferenceWithLayout>> *FBGetClassReferences(Class aCls
     FBIvarReference *wrapper = [[FBIvarReference alloc] initWithIvar:ivar];
 
     if (wrapper.type == FBStructType) {
-      std::string encoding = std::string(ivar_getTypeEncoding(wrapper.ivar));
+      const char *typeEncoding = ivar_getTypeEncoding(wrapper.ivar);
+      NSCAssert(typeEncoding, @"ivar_getTypeEncoding returned null");
+      std::string encoding = std::string(typeEncoding);
       NSArray<FBObjectInStructReference *> *references = FBGetReferencesForObjectsInStructEncoding(wrapper, encoding);
 
       [result addObjectsFromArray:references];
