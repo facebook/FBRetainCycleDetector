@@ -18,6 +18,20 @@
 #import "FBObjectiveCObject.h"
 #import "FBObjectGraphConfiguration.h"
 
+static BOOL FBClassIsSubclassOf(Class cls, Class parentCls) {
+  Class c = cls;
+  for (int depth = 0; c != Nil && depth < 128; depth++) {
+    if ((uintptr_t)c & (sizeof(void *) - 1)) {
+      return NO;
+    }
+    if (c == parentCls) {
+      return YES;
+    }
+    c = class_getSuperclass(c);
+  }
+  return NO;
+}
+
 static BOOL _ShouldBreakGraphEdge(FBObjectGraphConfiguration *configuration,
                                   FBObjectiveCGraphElement *fromObject,
                                   NSString *byIvar,
@@ -44,7 +58,7 @@ FBObjectiveCGraphElement *FBWrapObjectGraphElementWithContext(FBObjectiveCGraphE
                                              configuration:configuration
                                                   namePath:namePath];
   } else {
-    if ([object_getClass(object) isSubclassOfClass:[NSTimer class]] &&
+    if (FBClassIsSubclassOf(object_getClass(object), [NSTimer class]) &&
         configuration.shouldInspectTimers) {
       newElement = [[FBObjectiveCNSCFTimer alloc] initWithObject:object
                                                    configuration:configuration

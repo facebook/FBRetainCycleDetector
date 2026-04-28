@@ -15,6 +15,20 @@
 #import "FBObjectiveCGraphElement.h"
 #import "FBRetainCycleDetector.h"
 
+static BOOL FBClassIsSubclassOf(Class cls, Class parentCls) {
+  Class c = cls;
+  for (int depth = 0; c != Nil && depth < 128; depth++) {
+    if ((uintptr_t)c & (sizeof(void *) - 1)) {
+      return NO;
+    }
+    if (c == parentCls) {
+      return YES;
+    }
+    c = class_getSuperclass(c);
+  }
+  return NO;
+}
+
 FBGraphEdgeFilterBlock FBFilterBlockWithObjectIvarRelation(Class aCls, NSString *ivarName) {
   return FBFilterBlockWithObjectToManyIvarsRelation(aCls, [NSSet setWithObject:ivarName]);
 }
@@ -25,7 +39,7 @@ FBGraphEdgeFilterBlock FBFilterBlockWithObjectToManyIvarsRelation(Class aCls,
            NSString *byIvar,
            Class toObjectOfClass){
     if (aCls &&
-        [[fromObject objectClass] isSubclassOfClass:aCls]) {
+        FBClassIsSubclassOf([fromObject objectClass], aCls)) {
       // If graph element holds metadata about an ivar, it will be held in the name path, as early as possible
       if ([ivarNames containsObject:byIvar]) {
         return FBGraphEdgeInvalid;
@@ -40,7 +54,7 @@ FBGraphEdgeFilterBlock FBFilterBlockWithObjectIvarObjectRelation(Class fromClass
            NSString *byIvar,
            Class toObjectOfClass) {
     if (toClass &&
-        [toObjectOfClass isSubclassOfClass:toClass]) {
+        FBClassIsSubclassOf(toObjectOfClass, toClass)) {
       return FBFilterBlockWithObjectIvarRelation(fromClass, ivarName)(fromObject, byIvar, toObjectOfClass);
     }
     return FBGraphEdgeValid;
