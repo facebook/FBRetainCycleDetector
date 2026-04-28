@@ -57,6 +57,12 @@ FOUNDATION_EXPORT const unsigned char FBRetainCycleDetectorVersionString[];
 - (void)addCandidate:(nonnull id)candidate;
 
 /**
+ Adds a pure Swift object candidate via raw pointer, avoiding ObjC ARC.
+ Use for objects that don't inherit from NSObject.
+ */
+- (void)addSwiftCandidate:(nonnull void *)candidatePtr;
+
+/**
  Searches for all retain cycles for all candidates the detector has been
  provided with.
 

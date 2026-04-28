@@ -52,6 +52,17 @@ static const NSUInteger kFBRetainCycleDetectorDefaultStackDepth = 10;
   }
 }
 
+- (void)addSwiftCandidate:(void *)candidatePtr
+{
+  FBObjectiveCGraphElement *graphElement =
+    [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:candidatePtr
+                                            configuration:_configuration
+                                                 namePath:nil];
+  if (graphElement) {
+    [_candidates addObject:graphElement];
+  }
+}
+
 - (NSSet<NSArray<FBObjectiveCGraphElement *> *> *)findRetainCycles
 {
   return [self findRetainCyclesWithMaxCycleLength:kFBRetainCycleDetectorDefaultStackDepth];

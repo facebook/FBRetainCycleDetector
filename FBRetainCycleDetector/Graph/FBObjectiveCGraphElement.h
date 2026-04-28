@@ -34,6 +34,14 @@
 - (nonnull instancetype)initWithObject:(nullable id)object
                          configuration:(nonnull FBObjectGraphConfiguration *)configuration;
 
+/**
+ Initializer for pure Swift objects that cannot be stored as __weak id.
+ Stores the raw pointer without triggering ObjC ARC operations.
+ */
+- (nonnull instancetype)initWithUnsafeSwiftObject:(nonnull void *)objectPtr
+                                    configuration:(nonnull FBObjectGraphConfiguration *)configuration
+                                         namePath:(nullable NSArray<NSString *> *)namePath;
+
 
 /**
  Name path that describes how this object was retrieved from its parent object by names
@@ -42,6 +50,12 @@
 @property (nonatomic, copy, readonly, nullable) NSArray<NSString *> *namePath;
 @property (nonatomic, weak, nullable) id object;
 @property (nonatomic, readonly, nonnull) FBObjectGraphConfiguration *configuration;
+
+/**
+ Returns the raw object pointer. For ObjC objects, returns (__bridge void*)object.
+ For pure Swift objects, returns the stored raw pointer. Safe for both paths.
+ */
+- (nullable void *)objectPtr;
 
 /**
  Main accessor to all objects that the given object is retaining. Thread unsafe.

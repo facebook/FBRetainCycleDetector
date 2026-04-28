@@ -28,6 +28,9 @@
 @end
 
 @implementation FBObjectiveCGraphElement
+{
+  void *_unsafeSwiftObject;
+}
 
 - (instancetype)initWithObject:(id)object
 {
@@ -79,9 +82,37 @@
   return self;
 }
 
+- (instancetype)initWithUnsafeSwiftObject:(void *)objectPtr
+                            configuration:(nonnull FBObjectGraphConfiguration *)configuration
+                                 namePath:(NSArray<NSString *> *)namePath
+{
+  if (self = [super init]) {
+#if _INTERNAL_RCD_ENABLED
+    if (objectPtr && malloc_zone_from_ptr(objectPtr)) {
+      _unsafeSwiftObject = objectPtr;
+    }
+#endif
+    _namePath = namePath;
+    _configuration = configuration;
+  }
+  return self;
+}
+
+- (void *)objectPtr
+{
+  if (_unsafeSwiftObject) {
+    return _unsafeSwiftObject;
+  }
+  return (__bridge void *)_object;
+}
+
 - (NSSet *)allRetainedObjects
 {
-  NSArray *retainedObjectsNotWrapped = [FBAssociationManager associationsForObject:_object];
+  void *ptr = [self objectPtr];
+  if (!ptr) {
+    return nil;
+  }
+  NSArray *retainedObjectsNotWrapped = [FBAssociationManager associationsForObject:(__bridge id)ptr];
   NSMutableSet *retainedObjects = [NSMutableSet new];
 
   for (id obj in retainedObjectsNotWrapped) {
@@ -101,15 +132,14 @@
 {
   if ([object isKindOfClass:[FBObjectiveCGraphElement class]]) {
     FBObjectiveCGraphElement *objcObject = object;
-    // Use pointer equality
-    return objcObject.object == _object;
+    return [objcObject objectPtr] == [self objectPtr];
   }
   return NO;
 }
 
 - (NSUInteger)hash
 {
-  return (size_t)_object;
+  return (size_t)[self objectPtr];
 }
 
 - (NSString *)description
@@ -123,14 +153,22 @@
 
 - (size_t)objectAddress
 {
-  return (size_t)_object;
+  return (size_t)[self objectPtr];
 }
 
 - (NSString *)classNameOrNull
 {
   NSString *className;
-    
-  if (_object && ![_object isProxy] && [_object respondsToSelector:@selector(customClassDescription)]) {
+
+  if (_unsafeSwiftObject) {
+    // Pure Swift: can't call ObjC methods on the object.
+    // Use class_getName which is safe for Swift classes.
+    Class cls = [self objectClass];
+    if (cls) {
+      const char *name = class_getName(cls);
+      className = name ? [NSString stringWithUTF8String:name] : nil;
+    }
+  } else if (_object && ![_object isProxy] && [_object respondsToSelector:@selector(customClassDescription)]) {
     className = [_object customClassDescription];
   } else {
     className = NSStringFromClass(FBCastNonnullOrReportWarning([self objectClass]));
@@ -145,7 +183,11 @@
 
 - (Class)objectClass
 {
-  return object_getClass(_object);
+  void *ptr = [self objectPtr];
+  if (ptr) {
+    return object_getClass((__bridge id)ptr);
+  }
+  return nil;
 }
 
 - (bool)isSwift
