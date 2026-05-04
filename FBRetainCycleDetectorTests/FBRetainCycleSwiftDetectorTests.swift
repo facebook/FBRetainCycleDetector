@@ -233,13 +233,13 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
           shouldIncludeSwiftObjects: true,
           shouldUseSwiftABITraversal: true)
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true, false);
+        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true, false, false);
         XCTAssertEqual(references.count, 1)
       }
 
       func testThatGotReferenceWithNilCache() {
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true, false);
+        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true, false, false);
         XCTAssertEqual(references.count, 1)
       }
 
@@ -296,14 +296,14 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithWeak()
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true)
+      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
       XCTAssertEqual(references.count, 0, "Weak-only class should have no strong references")
     }
 
     func testABITraversal_unownedOnlyClass_returnsNoStrongRefs() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithUnowned(target: target)
-      let references = FBGetObjectStrongReferences(holder, nil, true, true)
+      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
       XCTAssertEqual(references.count, 0, "Unowned-only class should have no strong references")
     }
 
@@ -312,7 +312,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithMixedRefs(target: target)
       holder.strongRef = target
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true)
+      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
       XCTAssertEqual(references.count, 1, "Mixed class should return only the strong reference")
     }
 
@@ -321,7 +321,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithStrongAndWeak()
       holder.strongRef = target
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true)
+      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
       XCTAssertEqual(references.count, 1, "Should return only the strong reference, not the weak one")
     }
 
@@ -330,14 +330,14 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       holder.strong1 = PureSwiftTarget()
       holder.strong2 = PureSwiftTarget()
       holder.strong3 = PureSwiftTarget()
-      let references = FBGetObjectStrongReferences(holder, nil, true, true)
+      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
       XCTAssertEqual(references.count, 3, "Should return all 3 strong references")
     }
 
     func testABITraversal_singleStrongRef_returnsOne() {
       let pureSwiftObject = PureSwift()
       pureSwiftObject.someObject = PureSwiftTarget()
-      let references = FBGetObjectStrongReferences(pureSwiftObject, nil, true, true)
+      let references = FBGetObjectStrongReferences(pureSwiftObject, nil, true, true, false)
       XCTAssertEqual(references.count, 1, "Should return the single strong reference")
     }
 
@@ -486,7 +486,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testABITraversal_nilClosure_noReferences() {
       let obj = PureSwiftWithClosure()
       // closure is nil
-      let references = FBGetObjectStrongReferences(obj, nil, true, true)
+      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
       XCTAssertEqual(references.count, 0, "Nil closure should not produce any references")
     }
 
@@ -760,7 +760,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let nsObj = NSObject()
       pureSwift.someObject = nsObj
 
-      let references = FBGetObjectStrongReferences(pureSwift, nil, true, true)
+      let references = FBGetObjectStrongReferences(pureSwift, nil, true, true, false)
       XCTAssertEqual(references.count, 1, "Pure Swift holding NSObject should detect 1 strong reference")
     }
 
@@ -927,7 +927,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       child.baseRef = PureSwiftTarget()
       child.childRef = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(child, nil, true, true)
+      let references = FBGetObjectStrongReferences(child, nil, true, true, false)
       XCTAssertEqual(references.count, 2, "Should find refs from both superclass and subclass levels")
     }
 
@@ -938,7 +938,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       gc.childRef = PureSwiftTarget()
       gc.grandchildRef = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(gc, nil, true, true)
+      let references = FBGetObjectStrongReferences(gc, nil, true, true, false)
       XCTAssertEqual(references.count, 3, "Should find refs from all 3 levels of inheritance")
     }
 
@@ -1010,7 +1010,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.myStruct.ref1 = PureSwiftTarget()
       obj.myStruct.ref2 = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(obj, nil, true, true)
+      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
       XCTAssertEqual(references.count, 2, "Struct with 2 class refs should return both")
     }
 
@@ -1061,7 +1061,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.myStruct.ref = target1
       obj.directRef = target2
 
-      let references = FBGetObjectStrongReferences(obj, nil, true, true)
+      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
       XCTAssertEqual(references.count, 2, "Both struct ref and direct ref should be detected")
     }
 

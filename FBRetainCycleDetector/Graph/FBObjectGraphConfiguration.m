@@ -16,6 +16,7 @@
            shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
            shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects
           shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal
+       shouldScanSwiftObjectMemory:(BOOL)shouldScanSwiftObjectMemory
 {
   if (self = [super init]) {
     _filterBlocks = [filterBlocks copy];
@@ -23,11 +24,28 @@
     _shouldIncludeBlockAddress = shouldIncludeBlockAddress;
     _shouldIncludeSwiftObjects = shouldIncludeSwiftObjects;
     _shouldUseSwiftABITraversal = shouldUseSwiftABITraversal;
+    _shouldScanSwiftObjectMemory = shouldScanSwiftObjectMemory;
     _transformerBlock = [transformerBlock copy];
     _layoutCache = [NSMutableDictionary new];
   }
 
   return self;
+}
+
+- (instancetype)initWithFilterBlocks:(NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                 shouldInspectTimers:(BOOL)shouldInspectTimers
+                    transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
+           shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
+           shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects
+          shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal
+{
+  return [self initWithFilterBlocks:filterBlocks
+                shouldInspectTimers:shouldInspectTimers
+                   transformerBlock:transformerBlock
+          shouldIncludeBlockAddress:shouldIncludeBlockAddress
+          shouldIncludeSwiftObjects:shouldIncludeSwiftObjects
+         shouldUseSwiftABITraversal:shouldUseSwiftABITraversal
+      shouldScanSwiftObjectMemory:NO];
 }
 
 - (instancetype)initWithFilterBlocks:(NSArray<FBGraphEdgeFilterBlock> *)filterBlocks

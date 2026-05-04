@@ -30,7 +30,7 @@
     return nil;
   }
 
-  NSArray *strongIvars = FBGetObjectStrongReferences(obj, self.configuration.layoutCache, self.configuration.shouldIncludeSwiftObjects, self.configuration.shouldUseSwiftABITraversal);
+  NSArray *strongIvars = FBGetObjectStrongReferences(obj, self.configuration.layoutCache, self.configuration.shouldIncludeSwiftObjects, self.configuration.shouldUseSwiftABITraversal, self.configuration.shouldScanSwiftObjectMemory);
 
   NSMutableArray *retainedObjects = [[[super allRetainedObjects] allObjects] mutableCopy];
 

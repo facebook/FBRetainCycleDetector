@@ -229,7 +229,7 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(id obj
     return [result copy];
 }
 
-static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects, BOOL shouldUseSwiftABITraversal) {
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects, BOOL shouldUseSwiftABITraversal, BOOL shouldScanSwiftObjectMemory) {
     if (aCls == nil) {
         return @[];
     }
@@ -276,6 +276,10 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
             }
             return [result copy];
         }
+        if (shouldScanSwiftObjectMemory) {
+            // TODO: Implement heuristic memory scanning for pure Swift objects
+            return @[];
+        }
         return FBGetStrongReferencesForSwiftClass(obj, aCls);
     }
     return FBGetStrongReferencesForObjectiveCClass(aCls);
@@ -284,7 +288,8 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
 NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
                                                             NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache,
                                                             BOOL shouldIncludeSwiftObjects,
-                                                            BOOL shouldUseSwiftABITraversal) {
+                                                            BOOL shouldUseSwiftABITraversal,
+                                                            BOOL shouldScanSwiftObjectMemory) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;
@@ -297,13 +302,13 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
     NSString *claseName = [[NSString alloc] initWithCString:className encoding:NSUTF8StringEncoding];
 
     // Skip cache for ABI-traversed Swift classes — closure captures are instance-specific
-    BOOL skipCache = shouldUseSwiftABITraversal && shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(currentClass);
+    BOOL skipCache = (shouldUseSwiftABITraversal || shouldScanSwiftObjectMemory) && shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(currentClass);
     if (!skipCache) {
       ivars = layoutCache[claseName];
     }
 
     if (!ivars) {
-      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects, shouldUseSwiftABITraversal);
+      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects, shouldUseSwiftABITraversal, shouldScanSwiftObjectMemory);
       if (!skipCache && layoutCache && currentClass) {
         layoutCache[claseName] = ivars;
       }

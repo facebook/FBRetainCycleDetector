@@ -77,6 +77,15 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
 @property (nonatomic, readonly) BOOL shouldUseSwiftABITraversal;
 
 /**
+ Use heuristic memory scanning for pure Swift objects when reflection
+ metadata is not available (e.g., production builds). Scans the object's
+ memory for pointer-sized values that look like valid heap objects.
+ Can find strong references and skip weak references (bit 0 set), but
+ cannot distinguish strong from unowned.
+ */
+@property (nonatomic, readonly) BOOL shouldScanSwiftObjectMemory;
+
+/**
  Will cache layout
  */
 @property (nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache;
@@ -87,7 +96,15 @@ typedef FBObjectiveCGraphElement *_Nullable(^FBObjectiveCGraphElementTransformer
                          transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
                          shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
                          shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects
-                         shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal NS_DESIGNATED_INITIALIZER;
+                         shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal
+                         shouldScanSwiftObjectMemory:(BOOL)shouldScanSwiftObjectMemory NS_DESIGNATED_INITIALIZER;
+
+- (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
+                         shouldInspectTimers:(BOOL)shouldInspectTimers
+                         transformerBlock:(nullable FBObjectiveCGraphElementTransformerBlock)transformerBlock
+                         shouldIncludeBlockAddress:(BOOL)shouldIncludeBlockAddress
+                         shouldIncludeSwiftObjects:(BOOL)shouldIncludeSwiftObjects
+                         shouldUseSwiftABITraversal:(BOOL)shouldUseSwiftABITraversal;
 
 - (nonnull instancetype)initWithFilterBlocks:(nonnull NSArray<FBGraphEdgeFilterBlock> *)filterBlocks
                          shouldInspectTimers:(BOOL)shouldInspectTimers

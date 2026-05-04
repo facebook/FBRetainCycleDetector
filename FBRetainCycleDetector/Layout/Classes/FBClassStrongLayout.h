@@ -22,7 +22,8 @@ extern "C" {
 NSArray<id<FBObjectReference>> *_Nonnull FBGetObjectStrongReferences(id _Nullable obj,
                                                                      NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *_Nullable layoutCache,
                                                                      BOOL shouldIncludeSwiftObjects,
-                                                                     BOOL shouldUseSwiftABITraversal);
+                                                                     BOOL shouldUseSwiftABITraversal,
+                                                                     BOOL shouldScanSwiftObjectMemory);
 
 #ifdef __cplusplus
 }
