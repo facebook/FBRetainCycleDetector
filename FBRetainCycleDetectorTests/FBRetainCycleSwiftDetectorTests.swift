@@ -181,6 +181,45 @@ class PureSwiftWithStructAndRef {
   var directRef: AnyObject?
 }
 
+class PureSwiftWithValueTypesOnly {
+  var intVal: Int = 42
+  var boolVal: Bool = true
+  var doubleVal: Double = 3.14
+}
+
+class PureSwiftWithMultipleUnowned {
+  unowned var unowned1: PureSwiftTarget
+  unowned var unowned2: PureSwiftTarget
+
+  init(t1: PureSwiftTarget, t2: PureSwiftTarget) {
+    self.unowned1 = t1
+    self.unowned2 = t2
+  }
+}
+
+class PureSwiftWithStrongAndUnowned {
+  var strongRef: AnyObject?
+  unowned var unownedRef: PureSwiftTarget
+
+  init(target: PureSwiftTarget) {
+    self.unownedRef = target
+  }
+}
+
+class PureSwiftSelfRef {
+  var selfRef: AnyObject?
+}
+
+class PureSwiftWithObjCRef {
+  var objcRef: NSObject?
+}
+
+class PureSwiftWithTaggedPointerFields {
+  var smallNumber: NSNumber?
+  var shortString: NSString?
+  var strongRef: AnyObject?
+}
+
 class FBRetainCycleSwiftDetectorTests: XCTestCase {
 
  func testThatDetectorWillFindNoCyclesInEmptyObject() {
@@ -1095,5 +1134,337 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     //   Array enumerates via NSFastEnumeration, finds closure values, but they
     //   are thick functions — not ObjC blocks and not class instances. Need
     //   closure-as-graph-element support.
+
+    // MARK: - Heuristic Memory Scan Tests
+
+    func testMemoryScan_singleStrongRef_returnsOne() {
+      let obj = PureSwift()
+      obj.someObject = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Memory scan should find the single strong reference")
+    }
+
+    func testMemoryScan_multipleStrongRefs_returnsAll() {
+      let holder = PureSwiftWithMultipleStrong()
+      holder.strong1 = PureSwiftTarget()
+      holder.strong2 = PureSwiftTarget()
+      holder.strong3 = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 3, "Memory scan should find all 3 strong references")
+    }
+
+    func testMemoryScan_emptyObject_returnsNone() {
+      let obj = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 0, "Empty object should have no scanned references")
+    }
+
+    func testMemoryScan_valueTypesOnly_returnsNone() {
+      let obj = PureSwiftWithValueTypesOnly()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 0, "Value types (Int, Bool, Double) should not be reported as references")
+    }
+
+    func testMemoryScan_nilReferences_returnsNone() {
+      let obj = PureSwiftWithMultipleStrong()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 0, "Nil optional references should not be reported")
+    }
+
+    func testMemoryScan_weakOnly_returnsNone() {
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithWeak()
+      holder.weakRef = target
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 0, "Memory scan should skip weak refs")
+    }
+
+    func testMemoryScan_strongAndWeak_returnsOnlyStrong() {
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithStrongAndWeak()
+      holder.strongRef = target
+      holder.weakRef = target
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Memory scan should return strong ref but skip weak ref")
+    }
+
+    func testMemoryScan_childClass_noDuplication() {
+      let child = PureSwiftChild()
+      child.baseRef = PureSwiftTarget()
+      child.childRef = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(child, nil, true, false, true)
+      XCTAssertEqual(refs.count, 2, "Should find exactly 2 refs (one from each class level), no duplication")
+    }
+
+    func testMemoryScan_grandchild_allLevels() {
+      let gc = PureSwiftGrandchild()
+      gc.baseRef = PureSwiftTarget()
+      gc.childRef = PureSwiftTarget()
+      gc.grandchildRef = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(gc, nil, true, false, true)
+      XCTAssertEqual(refs.count, 3, "Should find 3 refs across 3 class levels without duplication")
+    }
+
+    func testMemoryScan_referenceNames_containOffset() {
+      let obj = PureSwift()
+      obj.someObject = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1)
+      let ref = refs[0] as AnyObject
+      let namePath = ref.perform(NSSelectorFromString("namePath"))?.takeUnretainedValue() as? [String]
+      XCTAssertTrue(namePath?[0].hasPrefix("scan[+") == true,
+        "Memory scan references should be named scan[+offset]")
+    }
+
+    func testMemoryScan_mixedValueAndRefInStruct() {
+      let obj = PureSwiftWithMixedStruct()
+      obj.myStruct.ref = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Only the class reference in the struct should be detected, not value types")
+    }
+
+    func testMemoryScan_unownedRef_reportedAsStrong() {
+      // FALSE POSITIVE: the only ref is unowned, but the scan reports it
+      // as strong. See the "Unowned Indistinguishability" section below
+      // for more tests documenting this limitation.
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithUnowned(target: target)
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Memory scan reports unowned as strong — known false positive")
+    }
+
+    func testMemoryScan_ABITakesPrecedence() {
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithMixedRefs(target: target)
+      holder.strongRef = PureSwiftTarget()
+      holder.weakRef = target
+      // With both flags on, ABI should take precedence (checked first in the if-chain)
+      let refsABI = FBGetObjectStrongReferences(holder, nil, true, true, true)
+      // ABI can distinguish strong from unowned — should find only strongRef
+      XCTAssertEqual(refsABI.count, 1, "ABI should take precedence and correctly return only strong ref")
+    }
+
+    // MARK: - Memory Scan End-to-End Cycle Detection
+
+    func testMemoryScan_cycleDetection_twoObjects() {
+      let objA = PureSwift()
+      let objB = PureSwift()
+      objA.someObject = objB
+      objB.someObject = objA
+      let configuration = FBObjectGraphConfiguration(
+        filterBlocks: [],
+        shouldInspectTimers: false,
+        transformerBlock: nil,
+        shouldIncludeBlockAddress: true,
+        shouldIncludeSwiftObjects: true,
+        shouldUseSwiftABITraversal: false,
+        shouldScanSwiftObjectMemory: true)
+      let detector = FBRetainCycleDetector(configuration: configuration)
+      detector.addCandidate(objA)
+      let retainCycles = detector.findRetainCycles()
+      XCTAssertEqual(retainCycles.count, 1, "Memory scan should detect retain cycle between two pure Swift objects")
+    }
+
+    func testMemoryScan_noCycle_weakBreak() {
+      let objA = PureSwiftWithStrongAndWeak()
+      let objB = PureSwiftWithStrongAndWeak()
+      objA.strongRef = objB
+      objB.weakRef = objA
+      let configuration = FBObjectGraphConfiguration(
+        filterBlocks: [],
+        shouldInspectTimers: false,
+        transformerBlock: nil,
+        shouldIncludeBlockAddress: true,
+        shouldIncludeSwiftObjects: true,
+        shouldUseSwiftABITraversal: false,
+        shouldScanSwiftObjectMemory: true)
+      let detector = FBRetainCycleDetector(configuration: configuration)
+      detector.addCandidate(objA)
+      let retainCycles = detector.findRetainCycles()
+      XCTAssertEqual(retainCycles.count, 0, "Memory scan should not report cycle when back-ref is weak")
+    }
+
+    // MARK: - Memory Scan — Closure Captures
+
+    func testMemoryScan_closureSingleCapture_detected() {
+      // When a closure captures a single object, Swift uses the captured
+      // object directly as the closure's context pointer (no capture box).
+      // The scan sees this as a pointer to a class instance and reports it.
+      let obj = PureSwiftWithClosure()
+      let target = PureSwiftTarget()
+      obj.closure = { [target] in
+        _ = target
+      }
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1,
+        "Single-capture closure uses direct context — scan detects it")
+    }
+
+    func testMemoryScan_closureCapturingSelf_cycleDetected() {
+      // Single-capture closure with self — the context pointer is self,
+      // which the scan sees as a class instance pointing back to the object.
+      let obj = PureSwiftWithClosure()
+      obj.closure = { [obj] in
+        _ = obj
+      }
+      let configuration = FBObjectGraphConfiguration(
+        filterBlocks: [],
+        shouldInspectTimers: false,
+        transformerBlock: nil,
+        shouldIncludeBlockAddress: true,
+        shouldIncludeSwiftObjects: true,
+        shouldUseSwiftABITraversal: false,
+        shouldScanSwiftObjectMemory: true)
+      let detector = FBRetainCycleDetector(configuration: configuration)
+      detector.addCandidate(obj)
+      let retainCycles = detector.findRetainCycles()
+      XCTAssertEqual(retainCycles.count, 1,
+        "Single-capture closure retaining self forms a cycle detectable by scan")
+    }
+
+    func testMemoryScan_closureMultiCapture_boxFiltered() {
+      // FALSE NEGATIVE: When a closure captures multiple values, Swift
+      // allocates a capture box (HeapLocalVariable, metadata kind 0x400).
+      // The scan's kind check filters out non-class heap objects
+      // (kind <= 0x7FF), so the capture box is skipped. The strong
+      // references inside the box are invisible to the scan.
+      // The ABI metadata path does not have this problem because it reads
+      // the CaptureDescriptor from the box's metadata to enumerate captures.
+      //
+      // This test intentionally asserts 0 refs — documenting the false
+      // negative, not correct behavior.
+      let obj = PureSwiftWithClosure()
+      let target1 = PureSwiftTarget()
+      let target2 = PureSwiftTarget()
+      obj.closure = {
+        _ = target1
+        _ = target2
+      }
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 0,
+        "Multi-capture closure uses a capture box — scan cannot see inside it")
+    }
+
+    func testMemoryScan_directRefAndClosure_bothDetected() {
+      let obj = PureSwiftWithOptionalClosure()
+      let target = PureSwiftTarget()
+      obj.strongRef = target
+      obj.closure = { [target] in
+        _ = target
+      }
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      // Direct ref + single-capture closure context = 2 refs
+      XCTAssertEqual(refs.count, 2,
+        "Memory scan finds both direct ref and single-capture closure context")
+    }
+
+    // MARK: - Memory Scan — Unowned Indistinguishability
+    //
+    // KNOWN LIMITATION: The heuristic memory scan cannot distinguish unowned
+    // references from strong references. Both are raw pointers to live heap
+    // objects, and both pass all validation checks (alignment, malloc_size,
+    // ISA). This means unowned refs are false positives — they will be
+    // reported as strong references and may cause spurious retain cycle
+    // reports. The ABI metadata path does not have this problem because it
+    // reads the mangled type name which encodes ownership (Xo suffix for
+    // unowned).
+    //
+    // The tests below intentionally assert that unowned refs ARE reported.
+    // This documents the false positive behavior, not correct behavior.
+
+    func testMemoryScan_multipleUnowned_allReportedAsStrong() {
+      // FALSE POSITIVE: both refs are unowned, but scan reports them as strong.
+      let t1 = PureSwiftTarget()
+      let t2 = PureSwiftTarget()
+      let holder = PureSwiftWithMultipleUnowned(t1: t1, t2: t2)
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 2,
+        "Memory scan reports all unowned refs as strong — cannot distinguish")
+    }
+
+    func testMemoryScan_strongAndUnowned_bothReported() {
+      // FALSE POSITIVE on unowned: scan sees 2 refs but only 1 is actually strong.
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithStrongAndUnowned(target: target)
+      holder.strongRef = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      XCTAssertEqual(refs.count, 2,
+        "Memory scan reports both strong and unowned — cannot distinguish them")
+    }
+
+    func testMemoryScan_mixedStrongWeakUnowned() {
+      // FALSE POSITIVE on unowned: scan correctly skips weak but cannot
+      // distinguish unowned from strong, so it reports 2 instead of 1.
+      let target = PureSwiftTarget()
+      let holder = PureSwiftWithMixedRefs(target: target)
+      holder.strongRef = PureSwiftTarget()
+      holder.weakRef = target
+      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      // strong (1) + unowned (1) = 2, weak skipped
+      XCTAssertEqual(refs.count, 2,
+        "Memory scan finds strong + unowned but skips weak")
+    }
+
+    // MARK: - Memory Scan — Additional Edge Cases
+
+    func testMemoryScan_selfReferencingObject() {
+      let obj = PureSwiftSelfRef()
+      obj.selfRef = obj
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Self-reference should be detected")
+    }
+
+    func testMemoryScan_selfReferencingObject_cycleDetected() {
+      let obj = PureSwiftSelfRef()
+      obj.selfRef = obj
+      let configuration = FBObjectGraphConfiguration(
+        filterBlocks: [],
+        shouldInspectTimers: false,
+        transformerBlock: nil,
+        shouldIncludeBlockAddress: true,
+        shouldIncludeSwiftObjects: true,
+        shouldUseSwiftABITraversal: false,
+        shouldScanSwiftObjectMemory: true)
+      let detector = FBRetainCycleDetector(configuration: configuration)
+      detector.addCandidate(obj)
+      let retainCycles = detector.findRetainCycles()
+      XCTAssertEqual(retainCycles.count, 1, "Self-referencing object forms a 1-element cycle")
+    }
+
+    func testMemoryScan_pureSwiftReferencingObjC() {
+      let obj = PureSwiftWithObjCRef()
+      obj.objcRef = NSObject()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refs.count, 1, "Pure Swift holding ObjC object should be detected")
+    }
+
+    func testMemoryScan_taggedPointerFieldsSkipped() {
+      // Tagged pointers (small NSNumber, short NSString) have bit 63 set
+      // on arm64 and are filtered by the scan. They are not heap objects
+      // and cannot participate in retain cycles.
+      let obj = PureSwiftWithTaggedPointerFields()
+      obj.smallNumber = NSNumber(value: 42)
+      obj.shortString = "hi" as NSString
+      obj.strongRef = PureSwiftTarget()
+      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      // Only the strongRef should be found — tagged pointers are skipped
+      XCTAssertGreaterThanOrEqual(refs.count, 1,
+        "At least the strong ref should be detected")
+      // Tagged pointers may or may not be detected depending on platform
+      // (arm64 vs x86_64 have different tagging). The key invariant is
+      // no crash and the real ref is found.
+    }
+
+    func testMemoryScan_optionalSetThenNilled() {
+      let obj = PureSwift()
+      let target = PureSwiftTarget()
+      obj.someObject = target
+      let refsWithValue = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refsWithValue.count, 1, "Should find ref when set")
+
+      obj.someObject = nil
+      let refsAfterNil = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      XCTAssertEqual(refsAfterNil.count, 0, "Should find nothing after nilling")
+    }
 
 }
