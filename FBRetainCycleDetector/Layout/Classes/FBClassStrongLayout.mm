@@ -8,6 +8,7 @@
 
 #import "FBClassStrongLayout.h"
 
+#import <mach/mach.h>
 #import <math.h>
 #import <memory>
 #import <objc/runtime.h>
@@ -277,8 +278,83 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
             return [result copy];
         }
         if (shouldScanSwiftObjectMemory) {
-            // TODO: Implement heuristic memory scanning for pure Swift objects
-            return @[];
+            // Heuristic memory scanning: scan the object's memory for
+            // pointer-sized values that look like valid heap objects.
+            // Finds strong refs, skips weak refs (bit 0 set), but cannot
+            // distinguish strong from unowned.
+            NSMutableArray<id<FBObjectReference>> *result = [NSMutableArray new];
+            size_t instanceSize = class_getInstanceSize(aCls);
+            const char *objPtr = (const char *)(__bridge const void *)obj;
+
+            // Only scan the byte range belonging to THIS class, not its
+            // superclass. The superclass walk handles parent classes separately.
+            Class superCls = class_getSuperclass(aCls);
+            size_t startOffset = superCls ? class_getInstanceSize(superCls) : 16;
+            if (startOffset < 16) startOffset = 16; // at minimum, skip HeapObject header
+
+            for (size_t offset = startOffset; offset + sizeof(void *) <= instanceSize; offset += sizeof(void *)) {
+                const void *val = *(const void **)(objPtr + offset);
+                if (!val) continue;
+                if ((uintptr_t)val & 0x7) continue;   // not pointer-aligned (includes weak refs with bit 0 set)
+                if ((uintptr_t)val >> 63) continue;    // tagged pointer
+                if (malloc_size(val) == 0) continue;   // not a heap allocation
+
+                // Validate that val points to a class instance, not a
+                // capture box or other non-class heap object.
+                //
+                // Reading the first word is safe (malloc_size > 0 guarantees
+                // the allocation is readable). For Swift non-class heap objects
+                // like capture boxes, the first word is a metadata pointer
+                // whose first word is the kind (a small enum value 0x001-0x7FF).
+                // For class instances (ObjC or Swift), the first word is an
+                // ISA/metadata pointer that resolves to a class.
+                const uintptr_t metaOrISA = *(const uintptr_t *)val;
+                if (!metaOrISA) continue;
+
+                const uintptr_t *metaPtr = (const uintptr_t *)metaOrISA;
+                #if __arm64__
+                // On arm64, non-pointer ISA has tag bits. Mask to get a
+                // canonical pointer before dereferencing.
+                #if __has_feature(ptrauth_calls)
+                const uintptr_t ISA_MASK = 0x007ffffffffffff8ULL; // arm64e
+                #else
+                const uintptr_t ISA_MASK = 0x0000000ffffffff8ULL; // arm64
+                #endif
+                metaPtr = (const uintptr_t *)(metaOrISA & ISA_MASK);
+                #endif
+                if (!metaPtr) continue;
+                if (malloc_size(metaPtr) > 0) {
+                    // metaPtr lands on the heap — not class/type metadata
+                    // (which lives in TEXT/DATA). Skip.
+                    continue;
+                }
+
+                // Verify metaPtr points to readable memory before
+                // dereferencing. ISA_MASK on a garbage value could
+                // produce an address in unmapped memory.
+                vm_address_t regionAddr = (vm_address_t)metaPtr;
+                vm_size_t regionSize;
+                mach_msg_type_number_t infoCount = VM_REGION_BASIC_INFO_COUNT_64;
+                vm_region_basic_info_data_64_t regionInfo;
+                memory_object_name_t regionObject;
+                kern_return_t kr = vm_region_64(
+                    mach_task_self(), &regionAddr, &regionSize,
+                    VM_REGION_BASIC_INFO_64, (vm_region_info_64_t)&regionInfo,
+                    &infoCount, &regionObject);
+                if (kr != KERN_SUCCESS
+                    || (vm_address_t)metaPtr < regionAddr
+                    || (vm_address_t)metaPtr >= regionAddr + regionSize
+                    || !(regionInfo.protection & VM_PROT_READ)) {
+                    continue;
+                }
+
+                uintptr_t targetKind = *metaPtr;
+                if (targetKind > 0 && targetKind <= LAST_ENUMERATED_METADATA_KIND) continue;
+
+                NSString *name = [NSString stringWithFormat:@"scan[+%zu]", offset];
+                [result addObject:[[FBSwiftABIReference alloc] initWithName:name offset:offset]];
+            }
+            return [result copy];
         }
         return FBGetStrongReferencesForSwiftClass(obj, aCls);
     }
