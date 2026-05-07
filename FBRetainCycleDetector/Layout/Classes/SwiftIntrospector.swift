@@ -7,6 +7,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import Darwin
 import Foundation
 
 @objc public class SwiftIntrospector: NSObject {
@@ -43,9 +44,14 @@ import Foundation
      }
 
     private class func asRetainableObject(_ value: Any) -> AnyObject? {
-        // Class instances are always safe to bridge to id.
+        // Class instances are safe to bridge to id, but we must verify the
+        // pointer is still live. Mirror can return stale pointers for
+        // unowned references whose target was deallocated. Bridging a
+        // dangling pointer back to ObjC id triggers swift_unknownObjectRetain
+        // crashes during the @objc return-value retain.
         if Swift.type(of: value) is AnyClass {
-            return value as AnyObject
+            let obj = value as AnyObject
+            return isLikelyLiveObject(obj) ? obj : nil
         }
         // Optional wrapping a class instance — unwrap and check.
         let valueMirror = Mirror(reflecting: value)
@@ -57,13 +63,28 @@ import Foundation
         }
         // Foundation-bridgeable value types (String→NSString, Array→NSArray, etc.)
         // are safe. Non-bridgeable Swift structs/enums will crash on `as AnyObject`.
-        // Check _ObjectiveCBridgeable conformance via the bridged result's identity:
-        // if bridging produces an object whose type is a class, it's safe.
-        // We use a two-step check to avoid crashing on non-bridgeable types.
         if value is NSObject {
-            return value as AnyObject
+            let obj = value as AnyObject
+            return isLikelyLiveObject(obj) ? obj : nil
         }
         return nil
+    }
+
+    /// Verify the object's pointer is still in a live heap allocation.
+    /// Tagged pointers (small NSNumber, short NSString) are not heap-allocated
+    /// and pass through unchanged.
+    private class func isLikelyLiveObject(_ obj: AnyObject) -> Bool {
+        let raw = Unmanaged.passUnretained(obj).toOpaque()
+        let intPtr = Int(bitPattern: raw)
+        // Tagged pointers: high bit set on arm64, low bit on x86_64.
+        // These are not heap allocations — accept them.
+        #if arch(arm64) || arch(arm64_32)
+        if intPtr < 0 { return true }
+        #else
+        if (intPtr & 1) != 0 { return true }
+        #endif
+        // Heap-allocated pointers must have a non-zero malloc size.
+        return malloc_size(raw) > 0
     }
 
     private class func getChild(mirror: Mirror, name: String) -> (Any?, Bool) {

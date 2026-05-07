@@ -19,9 +19,22 @@
 
 - (NSSet *)allRetainedObjects
 {
-  void *ptr = [self objectPtr];
-  if (!ptr) {
-    return nil;
+  // Pin the object alive for the entire method. For ObjC objects, reading
+  // self.object via the weak property gives us a brief strong reference
+  // that lives for the scope of strongObj. For pure Swift objects, the
+  // FBSwiftStrongRef wrapper held by the candidates array keeps the
+  // object alive across this method's invocation. Without pinning,
+  // another thread can release the object mid-traversal, causing
+  // crashes in object_getIvar / class_lookUpIvar.
+  __strong id strongObj = self.object;
+  void *ptr;
+  if (strongObj) {
+    ptr = (__bridge void *)strongObj;
+  } else {
+    ptr = [self objectPtr];
+    if (!ptr) {
+      return nil;
+    }
   }
   __unsafe_unretained id obj = (__bridge id)ptr;
 
