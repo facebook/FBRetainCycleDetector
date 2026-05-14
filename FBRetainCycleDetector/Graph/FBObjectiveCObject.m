@@ -9,6 +9,7 @@
 #import "FBObjectiveCObject.h"
 
 #import <objc/runtime.h>
+#import <malloc/malloc.h>
 
 #import "FBClassStrongLayout.h"
 #import "FBObjectGraphConfiguration.h"
@@ -33,6 +34,11 @@
   } else {
     ptr = [self objectPtr];
     if (!ptr) {
+      return nil;
+    }
+    // The pointer comes from _unsafeSwiftObject (raw, not prevent dealloc).
+    // Validate it still lives in a valid malloc zone before dereferencing.
+    if (!malloc_zone_from_ptr(ptr)) {
       return nil;
     }
   }

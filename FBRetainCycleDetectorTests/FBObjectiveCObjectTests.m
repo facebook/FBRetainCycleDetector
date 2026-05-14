@@ -8,8 +8,11 @@
 
 #import <XCTest/XCTest.h>
 
+#import <objc/runtime.h>
+
 #import <FBRetainCycleDetector/FBObjectiveCGraphElement+Internal.h>
 #import <FBRetainCycleDetector/FBObjectiveCObject.h>
+#import <FBRetainCycleDetector/FBObjectGraphConfiguration.h>
 #import <FBRetainCycleDetector/FBRetainCycleDetector.h>
 
 @interface _RCDObjectWrapperTestClass : NSObject
@@ -277,6 +280,75 @@
   NSSet *retainedObjects = [abstractedObject allRetainedObjects];
 
   XCTAssertEqual([retainedObjects count], 0);
+}
+
+- (void)testAllRetainedObjectsReturnsNilForDeallocatedObject
+{
+  FBObjectiveCObject *graphElement;
+  @autoreleasepool {
+    NSObject *obj = [NSObject new];
+    graphElement = [[FBObjectiveCObject alloc] initWithObject:obj
+                                               configuration:[FBObjectGraphConfiguration new]
+                                                    namePath:nil];
+    // Verify it works while the object is alive
+    XCTAssertNotNil([graphElement allRetainedObjects]);
+  }
+  // obj is now deallocated, weak reference zeroed
+  NSSet *result = [graphElement allRetainedObjects];
+  XCTAssertNil(result);
+}
+
+- (void)testAllRetainedObjectsReturnsNilForInvalidUnsafeSwiftPointer
+{
+  // Create a graph element with no object set
+  FBObjectiveCObject *graphElement = [[FBObjectiveCObject alloc] initWithObject:nil
+                                                                 configuration:[FBObjectGraphConfiguration new]
+                                                                      namePath:nil];
+
+  // Use the ObjC runtime to plant a non-malloc pointer into _unsafeSwiftObject.
+  // This simulates a Swift object whose memory is no longer in a valid malloc zone.
+  int stackVar = 0;
+  Ivar ivar = class_getInstanceVariable([FBObjectiveCGraphElement class], "_unsafeSwiftObject");
+  XCTAssertTrue(ivar != NULL, @"_unsafeSwiftObject ivar must exist");
+  if (ivar) {
+    void **ivarPtr = (void **)((uint8_t *)(__bridge void *)graphElement + ivar_getOffset(ivar));
+    *ivarPtr = &stackVar;
+  }
+
+  // objectPtr should now return the planted pointer
+  XCTAssertNotEqual([graphElement objectPtr], NULL);
+
+  // allRetainedObjects must return nil (not crash) because
+  // malloc_zone_from_ptr returns NULL for stack addresses
+  NSSet *result = [graphElement allRetainedObjects];
+  XCTAssertNil(result);
+
+  // Clean up: reset the ivar so dealloc doesn't trip over it
+  if (ivar) {
+    void **ivarPtr = (void **)((uint8_t *)(__bridge void *)graphElement + ivar_getOffset(ivar));
+    *ivarPtr = NULL;
+  }
+}
+
+- (void)testAllRetainedObjectsReturnsNilForFreedUnsafeSwiftPointer
+{
+  // Allocate real heap memory so initWithUnsafeSwiftObject: accepts it
+  void *ptr = calloc(1, 256);
+  XCTAssertTrue(ptr != NULL);
+
+  FBObjectiveCObject *graphElement = [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:ptr
+                                                                            configuration:[FBObjectGraphConfiguration new]
+                                                                                 namePath:nil];
+  // Verify the pointer was stored
+  XCTAssertEqual([graphElement objectPtr], ptr);
+
+  // Free the memory — simulates the Swift object being deallocated
+  free(ptr);
+
+  // allRetainedObjects should return nil (not crash) because
+  // malloc_zone_from_ptr returns NULL for freed memory
+  NSSet *result = [graphElement allRetainedObjects];
+  XCTAssertNil(result);
 }
 
 #endif //_INTERNAL_RCD_ENABLED
