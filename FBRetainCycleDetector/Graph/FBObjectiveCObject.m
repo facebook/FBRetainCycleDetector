@@ -22,13 +22,15 @@
 {
   // Pin the object alive for the entire method. For ObjC objects, reading
   // self.object via the weak property gives us a brief strong reference
-  // that lives for the scope of strongObj. For pure Swift objects, the
-  // FBSwiftStrongRef wrapper held by the candidates array keeps the
-  // object alive across this method's invocation. Without pinning,
-  // another thread can release the object mid-traversal, causing
-  // crashes in object_getIvar / class_lookUpIvar.
+  // that lives for the scope of strongObj. For pure Swift objects stored
+  // via initWithUnsafeSwiftObject:, the raw _unsafeSwiftObject pointer
+  // does NOT prevent deallocation. We must CFRetain the object to pin it
+  // alive during traversal — without this, the object can be freed on
+  // another thread between the malloc_zone_from_ptr check and subsequent
+  // use, causing _objc_fatal in lookUpImpOrForward / objc_msgSend.
   __strong id strongObj = self.object;
   void *ptr;
+  BOOL didRetainSwiftObject = NO;
   if (strongObj) {
     ptr = (__bridge void *)strongObj;
   } else {
@@ -36,16 +38,22 @@
     if (!ptr) {
       return nil;
     }
-    // The pointer comes from _unsafeSwiftObject (raw, not prevent dealloc).
-    // Validate it still lives in a valid malloc zone before dereferencing.
+    // The pointer comes from _unsafeSwiftObject (raw, no prevent dealloc).
+    // Validate it still lives in a valid malloc zone before retaining.
     if (!malloc_zone_from_ptr(ptr)) {
       return nil;
     }
+    // Pin the Swift object alive for the duration of this method.
+    // CFRetain works on any object with a valid isa pointer, including
+    // pure Swift objects accessible via the ObjC runtime.
+    CFRetain(ptr);
+    didRetainSwiftObject = YES;
   }
   __unsafe_unretained id obj = (__bridge id)ptr;
 
   Class aCls = object_getClass(obj);
   if (!aCls) {
+    if (didRetainSwiftObject) { CFRelease(ptr); }
     return nil;
   }
 
@@ -74,12 +82,14 @@
      will hold only Objective-C objects. We are not able to check in runtime what callbacks it uses to
      retain/release (if any) and we could easily crash here.
      */
+    if (didRetainSwiftObject) { CFRelease(ptr); }
     return [NSSet setWithArray:retainedObjects];
   }
 
   if (class_isMetaClass(aCls)) {
     // If it's a meta-class it can conform to following protocols,
     // but it would crash when trying enumerating
+    if (didRetainSwiftObject) { CFRelease(ptr); }
     return nil;
   }
 
@@ -130,6 +140,7 @@
     }
   }
 
+  if (didRetainSwiftObject) { CFRelease(ptr); }
   return [NSSet setWithArray:retainedObjects];
 }
 
