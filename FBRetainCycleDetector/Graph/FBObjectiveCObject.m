@@ -21,16 +21,19 @@
 - (NSSet *)allRetainedObjects
 {
   // Pin the object alive for the entire method. For ObjC objects, reading
-  // self.object via the weak property gives us a brief strong reference
-  // that lives for the scope of strongObj. For pure Swift objects stored
-  // via initWithUnsafeSwiftObject:, the raw _unsafeSwiftObject pointer
-  // does NOT prevent deallocation. We must CFRetain the object to pin it
-  // alive during traversal — without this, the object can be freed on
-  // another thread between the malloc_zone_from_ptr check and subsequent
-  // use, causing _objc_fatal in lookUpImpOrForward / objc_msgSend.
+  // self.object via the weak property gives us a brief strong reference that
+  // lives for the scope of strongObj. For pure Swift objects stored via
+  // initWithUnsafeSwiftObject:, the owning swift_retain taken in that
+  // initializer keeps the object alive for this graph element's whole lifetime
+  // (released in -dealloc), so _unsafeSwiftObject is guaranteed valid here.
+  // No per-call retain is needed (correctness is established by the owning
+  // retain) or safe (a retain taken now without an owning reference could
+  // dereference an already-freed pointer). The malloc_zone_from_ptr check
+  // below is cheap defense-in-depth — not load-bearing for correctness, but a
+  // belt-and-braces guard against pointer corruption or future code paths
+  // that might bypass the retaining initializer.
   __strong id strongObj = self.object;
   void *ptr;
-  BOOL didRetainSwiftObject = NO;
   if (strongObj) {
     ptr = (__bridge void *)strongObj;
   } else {
@@ -38,22 +41,18 @@
     if (!ptr) {
       return nil;
     }
-    // The pointer comes from _unsafeSwiftObject (raw, no prevent dealloc).
-    // Validate it still lives in a valid malloc zone before retaining.
+    // Defense-in-depth: the pointer is pinned alive by our owning swift_retain
+    // (taken in -initWithUnsafeSwiftObject:), so it should always be valid
+    // here. The malloc_zone_from_ptr check is a cheap paranoia guard, not a
+    // correctness requirement.
     if (!malloc_zone_from_ptr(ptr)) {
       return nil;
     }
-    // Pin the Swift object alive for the duration of this method.
-    // CFRetain works on any object with a valid isa pointer, including
-    // pure Swift objects accessible via the ObjC runtime.
-    CFRetain(ptr);
-    didRetainSwiftObject = YES;
   }
   __unsafe_unretained id obj = (__bridge id)ptr;
 
   Class aCls = object_getClass(obj);
   if (!aCls) {
-    if (didRetainSwiftObject) { CFRelease(ptr); }
     return nil;
   }
 
@@ -82,14 +81,12 @@
      will hold only Objective-C objects. We are not able to check in runtime what callbacks it uses to
      retain/release (if any) and we could easily crash here.
      */
-    if (didRetainSwiftObject) { CFRelease(ptr); }
     return [NSSet setWithArray:retainedObjects];
   }
 
   if (class_isMetaClass(aCls)) {
     // If it's a meta-class it can conform to following protocols,
     // but it would crash when trying enumerating
-    if (didRetainSwiftObject) { CFRelease(ptr); }
     return nil;
   }
 
@@ -140,7 +137,6 @@
     }
   }
 
-  if (didRetainSwiftObject) { CFRelease(ptr); }
   return [NSSet setWithArray:retainedObjects];
 }
 

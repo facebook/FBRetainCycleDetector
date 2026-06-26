@@ -15,6 +15,8 @@
 #import <FBRetainCycleDetector/FBObjectGraphConfiguration.h>
 #import <FBRetainCycleDetector/FBRetainCycleDetector.h>
 
+#import <FBRetainCycleDetectorTests/FBRetainCycleDetectorTests-Swift.h>
+
 @interface _RCDObjectWrapperTestClass : NSObject
 - (instancetype)initWithOtherObject:(_RCDObjectWrapperTestClass *)object;
 @property (nonatomic, strong) NSObject *someObject;
@@ -310,45 +312,123 @@
   int stackVar = 0;
   Ivar ivar = class_getInstanceVariable([FBObjectiveCGraphElement class], "_unsafeSwiftObject");
   XCTAssertTrue(ivar != NULL, @"_unsafeSwiftObject ivar must exist");
-  if (ivar) {
-    void **ivarPtr = (void **)((uint8_t *)(__bridge void *)graphElement + ivar_getOffset(ivar));
-    *ivarPtr = &stackVar;
+  if (!ivar) {
+    return;
   }
+  void **ivarPtr = (void **)((uint8_t *)(__bridge void *)graphElement + ivar_getOffset(ivar));
+  *ivarPtr = &stackVar;
 
-  // objectPtr should now return the planted pointer
-  XCTAssertNotEqual([graphElement objectPtr], NULL);
+  // The element now owns a swift_retain on _unsafeSwiftObject and releases it in
+  // -dealloc. We planted a raw stack pointer (bypassing the retaining
+  // initializer), so the ivar MUST be cleared before the element deallocs —
+  // otherwise -dealloc would swift_release a stack address. Use @finally so the
+  // reset runs even if an XCTAssert raises an NSException (which XCTest does
+  // when continueAfterFailure == NO): the @finally block executes during stack
+  // unwinding, before the exception propagates to XCTest's exception handler
+  // for result recording, so cleanup happens before the test method returns.
+  @try {
+    // objectPtr should now return the planted pointer
+    XCTAssertNotEqual([graphElement objectPtr], NULL);
 
-  // allRetainedObjects must return nil (not crash) because
-  // malloc_zone_from_ptr returns NULL for stack addresses
-  NSSet *result = [graphElement allRetainedObjects];
-  XCTAssertNil(result);
-
-  // Clean up: reset the ivar so dealloc doesn't trip over it
-  if (ivar) {
-    void **ivarPtr = (void **)((uint8_t *)(__bridge void *)graphElement + ivar_getOffset(ivar));
+    // allRetainedObjects must return nil (not crash) because
+    // malloc_zone_from_ptr returns NULL for stack addresses
+    XCTAssertNil([graphElement allRetainedObjects]);
+  } @finally {
     *ivarPtr = NULL;
   }
 }
 
-- (void)testAllRetainedObjectsReturnsNilForFreedUnsafeSwiftPointer
+- (void)testInitWithUnsafeSwiftObjectIgnoresNonHeapPointer
 {
-  // Allocate real heap memory so initWithUnsafeSwiftObject: accepts it
-  void *ptr = calloc(1, 256);
-  XCTAssertTrue(ptr != NULL);
+  // A non-heap (stack) address is rejected by the malloc_zone_from_ptr guard in
+  // initWithUnsafeSwiftObject:, so the pointer is neither stored nor retained.
+  // This pins down that the owning swift_retain is gated on a valid malloc zone
+  // — and therefore that -dealloc is a no-op for such elements (no unbalanced
+  // swift_release on memory we never retained).
+  //
+  // The complementary "stored pointer is in an invalid zone at traversal time →
+  // allRetainedObjects returns nil, no crash" path is covered by
+  // testAllRetainedObjectsReturnsNilForInvalidUnsafeSwiftPointer above. The old
+  // "free real heap memory out from under the element" scenario no longer
+  // applies: the element now owns a swift_retain for its whole lifetime, so the
+  // object cannot be freed while the element is alive.
+  int stackVar = 0;
+  FBObjectiveCObject *graphElement =
+      [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:&stackVar
+                                             configuration:[FBObjectGraphConfiguration new]
+                                                  namePath:nil];
 
-  FBObjectiveCObject *graphElement = [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:ptr
-                                                                            configuration:[FBObjectGraphConfiguration new]
-                                                                                 namePath:nil];
-  // Verify the pointer was stored
-  XCTAssertEqual([graphElement objectPtr], ptr);
+  XCTAssertEqual([graphElement objectPtr], NULL);
+  XCTAssertNil([graphElement allRetainedObjects]);
+}
 
-  // Free the memory — simulates the Swift object being deallocated
-  free(ptr);
+- (void)testInitWithUnsafeSwiftObjectStoresAndRetainsHeapPointer
+{
+  // Positive complement to testInitWithUnsafeSwiftObjectIgnoresNonHeapPointer:
+  // a heap pointer with a valid malloc zone IS accepted, stored, and retained
+  // by the initializer. We use an ObjC NSObject so that swift_retain (which
+  // falls through to objc_retain for objects with an ObjC isa) is safe to
+  // call; malloc_zone_from_ptr returns a valid zone for ObjC-allocated heap
+  // objects, satisfying the init guard. The store-after-retain coupling means
+  // a non-NULL objectPtr here implies the swift_retain succeeded.
+  NSObject *heapObj = [NSObject new];
+  void *heapPtr = (__bridge void *)heapObj;
 
-  // allRetainedObjects should return nil (not crash) because
-  // malloc_zone_from_ptr returns NULL for freed memory
-  NSSet *result = [graphElement allRetainedObjects];
-  XCTAssertNil(result);
+  FBObjectiveCObject *graphElement =
+      [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:heapPtr
+                                             configuration:[FBObjectGraphConfiguration new]
+                                                  namePath:nil];
+
+  XCTAssertEqual([graphElement objectPtr], heapPtr);
+  // heapObj outlives graphElement in this scope, so the swift_release issued
+  // by -dealloc when graphElement goes out of scope is balanced against one
+  // of heapObj's still-live retains and does not free it prematurely.
+}
+
+- (void)testOwningRetainBalanceForPureSwiftObject
+{
+  // End-to-end balance check for the owning swift_retain/swift_release pair on a
+  // *pure-Swift* object (the production crash population), driven via
+  // RCDDeinitProbeHarness. This is the one test that fails on ALL THREE
+  // regressions the new ownership contract could introduce:
+  //   - forgot-to-retain in -initWithUnsafeSwiftObject: -> the probe deinits as
+  //     soon as the external ref is dropped (deinitCount == 1 too early).
+  //   - leak / missing swift_release in -dealloc -> the probe never deinits
+  //     (deinitCount stays 0 after the element is gone).
+  //   - double-release -> over-release crash / early deinit.
+  // The existing init tests only assert the guard+store halves; nothing else
+  // observes that the retain is actually balanced by exactly one release.
+  [RCDDeinitProbeHarness resetDeinitCount];
+
+  // +1 external strong ref, simulating the single FBSwiftStrongRef the RCD
+  // manager holds on a candidate at the moment the graph element is built.
+  void *probePtr = [RCDDeinitProbeHarness makeRetainedProbe];
+
+  FBObjectiveCObject *graphElement =
+      [[FBObjectiveCObject alloc] initWithUnsafeSwiftObject:probePtr
+                                             configuration:[FBObjectGraphConfiguration new]
+                                                  namePath:nil];
+  XCTAssertEqual([graphElement objectPtr], probePtr, @"valid heap Swift pointer must be stored");
+
+  // Drop the external ref. Only the element's owning swift_retain remains, so
+  // the object must stay alive (this is exactly what was broken before the fix).
+  [RCDDeinitProbeHarness releaseProbe:probePtr];
+  XCTAssertEqual(
+      [RCDDeinitProbeHarness deinitCount],
+      0,
+      @"owning swift_retain must keep the pure-Swift object alive after the only external ref is dropped");
+
+  // A detection pass over the pinned object must not use-after-free.
+  XCTAssertNoThrow([graphElement allRetainedObjects]);
+  XCTAssertEqual(
+      [RCDDeinitProbeHarness deinitCount], 0, @"object must stay alive for the element's whole lifetime");
+
+  // Releasing the element runs -dealloc, which must swift_release exactly once.
+  graphElement = nil;
+  XCTAssertEqual(
+      [RCDDeinitProbeHarness deinitCount],
+      1,
+      @"-dealloc must swift_release exactly once: no leak (would stay 0) and no double-release (would over-release)");
 }
 
 #endif //_INTERNAL_RCD_ENABLED

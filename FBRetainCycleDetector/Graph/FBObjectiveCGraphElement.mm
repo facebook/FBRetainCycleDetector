@@ -8,6 +8,7 @@
 
 #import "FBObjectiveCGraphElement+Internal.h"
 
+#import <dlfcn.h>
 #import <objc/message.h>
 #import <objc/runtime.h>
 #import <malloc/malloc.h>
@@ -27,6 +28,25 @@ extern "C" char *swift_demangle(
     char *outputBuffer,
     size_t *outputBufferSize,
     uint32_t flags);
+
+// Pure Swift objects are refcounted by the Swift runtime, not ObjC ARC. To pin
+// one alive we call swift_retain/swift_release directly — the same mechanism
+// FBSwiftStrongRef uses to keep RCD candidates alive. Resolved lazily via dlsym
+// so this library carries no link-time dependency on the Swift runtime; if the
+// process has no Swift runtime there are no Swift candidates to retain anyway.
+typedef void (*FBRCDSwiftRefFunction)(void *);
+
+static FBRCDSwiftRefFunction _fbRCDSwiftRetain = NULL;
+static FBRCDSwiftRefFunction _fbRCDSwiftRelease = NULL;
+
+static void FBRCDEnsureSwiftRuntime(void)
+{
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    _fbRCDSwiftRetain = (FBRCDSwiftRefFunction)dlsym(RTLD_DEFAULT, "swift_retain");
+    _fbRCDSwiftRelease = (FBRCDSwiftRefFunction)dlsym(RTLD_DEFAULT, "swift_release");
+  });
+}
 
 @protocol FBRetainCycleDetectorCustomClassDescribable
 
@@ -96,13 +116,51 @@ extern "C" char *swift_demangle(
   if (self = [super init]) {
 #if _INTERNAL_RCD_ENABLED
     if (objectPtr && malloc_zone_from_ptr(objectPtr)) {
-      _unsafeSwiftObject = objectPtr;
+      // Take an owning Swift reference for this graph element's entire lifetime.
+      // The caller (FBRCDManager) still holds an FBSwiftStrongRef on objectPtr
+      // at this exact point, so the object is provably alive *now* — this is the
+      // only safe moment to retain it. Holding the +1 here pins the object
+      // across the whole detection pass (graph traversal AND leak reporting),
+      // regardless of when ARC releases the caller's candidate array. Balanced
+      // by swift_release in -dealloc. A retain taken later (e.g. inside
+      // -allRetainedObjects) would be unsafe: by then the pointer may already be
+      // dangling, so the retain itself would dereference freed memory.
+      FBRCDEnsureSwiftRuntime();
+      // Only adopt the pointer if we can both retain it now and release it in
+      // -dealloc. Coupling the ivar store to a successful retain keeps the
+      // retain/release pair balanced by construction: we never store a pointer
+      // we didn't pin, so -dealloc can never over-release one we don't own.
+      if (_fbRCDSwiftRetain && _fbRCDSwiftRelease) {
+        _fbRCDSwiftRetain(objectPtr);
+        _unsafeSwiftObject = objectPtr;
+      }
     }
 #endif
     _namePath = namePath;
     _configuration = configuration;
   }
   return self;
+}
+
+- (void)dealloc
+{
+#if _INTERNAL_RCD_ENABLED
+  // Balance the swift_retain taken in -initWithUnsafeSwiftObject:. _object is a
+  // weak property (ObjC path) and needs no release here; only the raw Swift
+  // pointer carries an owning reference.
+  //
+  // Invariant: _unsafeSwiftObject is non-NULL IFF init successfully called
+  // _fbRCDSwiftRetain on it. The init store is gated on (objectPtr &&
+  // malloc_zone_from_ptr(objectPtr) && _fbRCDSwiftRetain && _fbRCDSwiftRelease)
+  // and the assignment to _unsafeSwiftObject happens only after the retain
+  // call — so a non-NULL ivar here implies a paired +1 to release, and a NULL
+  // ivar means no retain was ever taken. Any future code path that writes
+  // _unsafeSwiftObject without going through the retaining initializer MUST
+  // null the ivar before -dealloc, or this will double-release.
+  if (_unsafeSwiftObject && _fbRCDSwiftRelease) {
+    _fbRCDSwiftRelease(_unsafeSwiftObject);
+  }
+#endif
 }
 
 - (void *)objectPtr
