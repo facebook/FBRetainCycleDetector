@@ -19,7 +19,16 @@ extern "C" {
 NSArray *_Nullable FBGetBlockStrongReferences(void *_Nonnull block);
 
 BOOL FBObjectIsBlock(void *_Nullable object);
-  
+
+/**
+ Process-wide count of capture slots that the block walker filtered out
+ because the candidate pointer failed liveness checks. RCD scans on a
+ background thread can race with capture teardown — bumping this counter
+ (and silently skipping the slot) replaces a hard crash with a sampled
+ signal. Read for diagnostics; resets only on process restart.
+ */
+uint64_t FBRCDFilteredCaptureSlotCount(void);
+
 #ifdef __cplusplus
 }
 #endif
