@@ -55,10 +55,45 @@ namespace {
         index = string.length();
         return "";
       }
-      
+
       std::string inBetweenString = string.substr(index, pos-index);
       index = pos;
       return inBetweenString;
+    }
+
+    /**
+     Consumes a union encoding, i.e. "(name=member1 member2 ...)" or "(?=member1 member2 ...)"
+     for anonymous unions, starting at the current character which has to be '('.
+     Nested unions and quoted member names are handled. Returns false if no matching ')'
+     is found before the end of the string.
+     */
+    bool scanToClosingParen() {
+      size_t depth = 0;
+      while (index < string.length()) {
+        const char character = string[index];
+        if (character == '(') {
+          ++depth;
+        } else if (character == ')') {
+          --depth;
+          if (depth == 0) {
+            ++index;
+            return true;
+          }
+        } else if (character == '"') {
+          // Member names inside a union are quoted; skip the whole name in case it
+          // contains characters that look like parens.
+          ++index;
+          while (index < string.length() && string[index] != '"') {
+            ++index;
+          }
+          if (index < string.length()) {
+            ++index;
+          }
+          continue;
+        }
+        ++index;
+      }
+      return false;
     }
   };
   
@@ -115,7 +150,26 @@ namespace FB { namespace RetainCycleDetector { namespace Parser {
                                                                 scanner.string.substr(locBefore, (scanner.index - locBefore)),
                                                                 parseResult.typeName,
                                                                 parseResult.containedTypes);
-        
+
+        types.emplace_back(type);
+      } else if (scanner.currentCharacter() == '(') {
+        // Unions are encoded as "(name=...)" (or "(?=...)" when the union is
+        // anonymous). We do not recurse into them: instead the whole union is
+        // consumed as a single opaque type, so the offsets of the types that
+        // follow a union are still computed correctly. Parsing union members
+        // as if they were sequential struct fields shifted every subsequent
+        // offset and produced malformed encodings like "(?=".
+        const auto locBefore = scanner.index;
+        __unused const auto matchedClosingParen = scanner.scanToClosingParen();
+        std::string nameFromBefore = "";
+        if (types.size() > 0) {
+          if (std::shared_ptr<Unresolved> maybeUnresolved = std::dynamic_pointer_cast<Unresolved>(types.back())) {
+            nameFromBefore = maybeUnresolved->value;
+            types.pop_back();
+          }
+        }
+        std::shared_ptr<Type> type = std::make_shared<Type>(nameFromBefore,
+                                                            scanner.string.substr(locBefore, (scanner.index - locBefore)));
         types.emplace_back(type);
       } else {
         // It's a type name (literal), let's advance until we find '"', or '}'
