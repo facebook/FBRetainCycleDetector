@@ -93,7 +93,7 @@ static void rcd_perform_rebinding_with_section(struct rcd_rebindings_entry *rebi
                                            nlist_t *symtab,
                                            char *strtab,
                                            uint32_t *indirect_symtab) {
-  const bool isDataConst = strcmp(section->segname, "__DATA_CONST") == 0;
+  const bool isDataConst = strcmp(section->segname, SEG_DATA_CONST) == 0;
   uint32_t *indirect_symbol_indices = indirect_symtab + section->reserved1;
   void **indirect_symbol_bindings = (void **)((uintptr_t)slide + section->addr);
   vm_prot_t oldProtection = VM_PROT_READ;
@@ -119,7 +119,9 @@ static void rcd_perform_rebinding_with_section(struct rcd_rebindings_entry *rebi
               indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
             *(cur->rebindings[j].replaced) = indirect_symbol_bindings[i];
           }
-          indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+          if (i < (sizeof(indirect_symbol_bindings) / sizeof(indirect_symbol_bindings[0]))) {
+            indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+          }
           goto symbol_loop;
         }
       }
