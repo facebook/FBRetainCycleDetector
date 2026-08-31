@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
     :git => "https://github.com/facebook/FBRetainCycleDetector.git",
     :tag => "0.1.4"
   }
-  s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,rcd_fishhook}/**/*.{h,m,mm,c}"
+  s.source_files  = "FBRetainCycleDetector", "{FBRetainCycleDetector,rcd_fishhook}/**/*.{h,m,mm,c,swift}"
 
   mrr_files = [
     'FBRetainCycleDetector/Associations/FBAssociationManager.h',
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
     'FBRetainCycleDetector/Layout/Classes/FBClassStrongLayoutHelpers.m',
   ]
 
-  files = Pathname.glob("FBRetainCycleDetector/**/*.{h,m,mm}")
+  files = Pathname.glob("FBRetainCycleDetector/**/*.{h,m,mm,swift}")
   files = files.map {|file| file.to_path}
   files = files.reject {|file| mrr_files.include?(file)}
 
