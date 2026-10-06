@@ -56,7 +56,20 @@
     return nil;
   }
 
-  NSArray *strongIvars = FBGetObjectStrongReferences(obj, self.configuration.layoutCache, self.configuration.shouldIncludeSwiftObjects, self.configuration.shouldUseSwiftABITraversal, self.configuration.shouldScanSwiftObjectMemory);
+  FBSwiftReferenceDiscoveryMode swiftReferenceDiscoveryMode = FBSwiftReferenceDiscoveryModeDisabled;
+  if (self.configuration.shouldIncludeSwiftObjects) {
+    if (self.configuration.shouldUseSwiftABITraversal) {
+      swiftReferenceDiscoveryMode = FBSwiftReferenceDiscoveryModeABIMetadata;
+    } else if (self.configuration.shouldScanSwiftObjectMemory) {
+      swiftReferenceDiscoveryMode = FBSwiftReferenceDiscoveryModeHeuristicMemoryScan;
+    } else {
+      swiftReferenceDiscoveryMode = FBSwiftReferenceDiscoveryModeRuntimeIntrospection;
+    }
+  }
+
+  NSArray *strongIvars = FBGetObjectStrongReferences(obj,
+                                                      self.configuration.layoutCache,
+                                                      swiftReferenceDiscoveryMode);
 
   NSMutableArray *retainedObjects = [[[super allRetainedObjects] allObjects] mutableCopy];
 

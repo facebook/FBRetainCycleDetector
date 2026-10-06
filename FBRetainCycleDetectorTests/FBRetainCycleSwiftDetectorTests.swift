@@ -279,13 +279,13 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
           shouldIncludeSwiftObjects: true,
           shouldUseSwiftABITraversal: true)
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, true, false, false);
+        let references = FBGetObjectStrongReferences(pureSwifObject, configuration.layoutCache, .runtimeIntrospection);
         XCTAssertEqual(references.count, 1)
       }
 
       func testThatGotReferenceWithNilCache() {
         let pureSwifObject = PureSwift()
-        let references = FBGetObjectStrongReferences(pureSwifObject, nil, true, false, false);
+        let references = FBGetObjectStrongReferences(pureSwifObject, nil, .runtimeIntrospection);
         XCTAssertEqual(references.count, 1)
       }
 
@@ -342,14 +342,14 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithWeak()
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
       XCTAssertEqual(references.count, 0, "Weak-only class should have no strong references")
     }
 
     func testABITraversal_unownedOnlyClass_returnsNoStrongRefs() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithUnowned(target: target)
-      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
       XCTAssertEqual(references.count, 0, "Unowned-only class should have no strong references")
     }
 
@@ -358,7 +358,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithMixedRefs(target: target)
       holder.strongRef = target
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
       XCTAssertEqual(references.count, 1, "Mixed class should return only the strong reference")
     }
 
@@ -367,7 +367,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithStrongAndWeak()
       holder.strongRef = target
       holder.weakRef = target
-      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
       XCTAssertEqual(references.count, 1, "Should return only the strong reference, not the weak one")
     }
 
@@ -376,14 +376,14 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       holder.strong1 = PureSwiftTarget()
       holder.strong2 = PureSwiftTarget()
       holder.strong3 = PureSwiftTarget()
-      let references = FBGetObjectStrongReferences(holder, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
       XCTAssertEqual(references.count, 3, "Should return all 3 strong references")
     }
 
     func testABITraversal_singleStrongRef_returnsOne() {
       let pureSwiftObject = PureSwift()
       pureSwiftObject.someObject = PureSwiftTarget()
-      let references = FBGetObjectStrongReferences(pureSwiftObject, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(pureSwiftObject, nil, .abiMetadata)
       XCTAssertEqual(references.count, 1, "Should return the single strong reference")
     }
 
@@ -532,7 +532,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testABITraversal_nilClosure_noReferences() {
       let obj = PureSwiftWithClosure()
       // closure is nil
-      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(obj, nil, .abiMetadata)
       XCTAssertEqual(references.count, 0, "Nil closure should not produce any references")
     }
 
@@ -806,7 +806,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let nsObj = NSObject()
       pureSwift.someObject = nsObj
 
-      let references = FBGetObjectStrongReferences(pureSwift, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(pureSwift, nil, .abiMetadata)
       XCTAssertEqual(references.count, 1, "Pure Swift holding NSObject should detect 1 strong reference")
     }
 
@@ -973,7 +973,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       child.baseRef = PureSwiftTarget()
       child.childRef = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(child, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(child, nil, .abiMetadata)
       XCTAssertEqual(references.count, 2, "Should find refs from both superclass and subclass levels")
     }
 
@@ -984,7 +984,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       gc.childRef = PureSwiftTarget()
       gc.grandchildRef = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(gc, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(gc, nil, .abiMetadata)
       XCTAssertEqual(references.count, 3, "Should find refs from all 3 levels of inheritance")
     }
 
@@ -1056,7 +1056,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.myStruct.ref1 = PureSwiftTarget()
       obj.myStruct.ref2 = PureSwiftTarget()
 
-      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(obj, nil, .abiMetadata)
       XCTAssertEqual(references.count, 2, "Struct with 2 class refs should return both")
     }
 
@@ -1107,7 +1107,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.myStruct.ref = target1
       obj.directRef = target2
 
-      let references = FBGetObjectStrongReferences(obj, nil, true, true, false)
+      let references = FBGetObjectStrongReferences(obj, nil, .abiMetadata)
       XCTAssertEqual(references.count, 2, "Both struct ref and direct ref should be detected")
     }
 
@@ -1149,7 +1149,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testMemoryScan_singleStrongRef_returnsOne() {
       let obj = PureSwiftWithStrongAndPointerBits()
       obj.strongRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Memory scan should find the single strong reference")
     }
 
@@ -1158,25 +1158,25 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       holder.strong1 = PureSwiftTarget()
       holder.strong2 = PureSwiftTarget()
       holder.strong3 = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 3, "Memory scan should find all 3 strong references")
     }
 
     func testMemoryScan_emptyObject_returnsNone() {
       let obj = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 0, "Empty object should have no scanned references")
     }
 
     func testMemoryScan_valueTypesOnly_returnsNone() {
       let obj = PureSwiftWithValueTypesOnly()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 0, "Value types (Int, Bool, Double) should not be reported as references")
     }
 
     func testMemoryScan_nilReferences_returnsNone() {
       let obj = PureSwiftWithMultipleStrong()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 0, "Nil optional references should not be reported")
     }
 
@@ -1184,7 +1184,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithWeak()
       holder.weakRef = target
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 0, "Memory scan should skip weak refs")
     }
 
@@ -1193,7 +1193,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithStrongAndWeak()
       holder.strongRef = target
       holder.weakRef = target
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Memory scan should return strong ref but skip weak ref")
     }
 
@@ -1201,7 +1201,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let child = PureSwiftChild()
       child.baseRef = PureSwiftTarget()
       child.childRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(child, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(child, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 2, "Should find exactly 2 refs (one from each class level), no duplication")
     }
 
@@ -1210,14 +1210,14 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       gc.baseRef = PureSwiftTarget()
       gc.childRef = PureSwiftTarget()
       gc.grandchildRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(gc, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(gc, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 3, "Should find 3 refs across 3 class levels without duplication")
     }
 
     func testMemoryScan_referenceNames_containOffset() {
       let obj = PureSwiftWithStrongAndPointerBits()
       obj.strongRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1)
       let ref = refs[0] as AnyObject
       let namePath = ref.perform(NSSelectorFromString("namePath"))?.takeUnretainedValue() as? [String]
@@ -1239,7 +1239,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       // Keep the decoy allocation live so this test isolates ownership
       // classification rather than depending on allocator reuse.
       withExtendedLifetime(nonRetainedTarget) {
-        let heuristicRefs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+        let heuristicRefs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
         let referencedObjects = heuristicRefs.compactMap { ref -> AnyObject? in
           (ref as AnyObject)
             .perform(NSSelectorFromString("objectReferenceFromObject:"), with: holder)?
@@ -1253,7 +1253,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
 
         // ABI traversal knows that pointerBits is a UInt and therefore provides
         // the behavior a future product-code fix should preserve.
-        let abiRefs = FBGetObjectStrongReferences(holder, nil, true, true, false)
+        let abiRefs = FBGetObjectStrongReferences(holder, nil, .abiMetadata)
         XCTAssertEqual(abiRefs.count, 1,
           "ABI traversal should report only the actual strong reference")
       }
@@ -1262,7 +1262,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testMemoryScan_mixedValueAndRefInStruct() {
       let obj = PureSwiftWithMixedStruct()
       obj.myStruct.ref = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Only the class reference in the struct should be detected, not value types")
     }
 
@@ -1272,19 +1272,8 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       // for more tests documenting this limitation.
       let target = PureSwiftTarget()
       let holder = PureSwiftWithUnowned(target: target)
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Memory scan reports unowned as strong — known false positive")
-    }
-
-    func testMemoryScan_ABITakesPrecedence() {
-      let target = PureSwiftTarget()
-      let holder = PureSwiftWithMixedRefs(target: target)
-      holder.strongRef = PureSwiftTarget()
-      holder.weakRef = target
-      // With both flags on, ABI should take precedence (checked first in the if-chain)
-      let refsABI = FBGetObjectStrongReferences(holder, nil, true, true, true)
-      // ABI can distinguish strong from unowned — should find only strongRef
-      XCTAssertEqual(refsABI.count, 1, "ABI should take precedence and correctly return only strong ref")
     }
 
     // MARK: - Memory Scan End-to-End Cycle Detection
@@ -1338,7 +1327,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.closure = { [target] in
         _ = target
       }
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1,
         "Single-capture closure uses direct context — scan detects it")
     }
@@ -1383,7 +1372,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
         _ = target1
         _ = target2
       }
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 0,
         "Multi-capture closure uses a capture box — scan cannot see inside it")
     }
@@ -1395,7 +1384,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.closure = { [target] in
         _ = target
       }
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       // Direct ref + single-capture closure context = 2 refs
       XCTAssertEqual(refs.count, 2,
         "Memory scan finds both direct ref and single-capture closure context")
@@ -1420,7 +1409,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let t1 = PureSwiftTarget()
       let t2 = PureSwiftTarget()
       let holder = PureSwiftWithMultipleUnowned(t1: t1, t2: t2)
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 2,
         "Memory scan reports all unowned refs as strong — cannot distinguish")
     }
@@ -1430,7 +1419,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let target = PureSwiftTarget()
       let holder = PureSwiftWithStrongAndUnowned(target: target)
       holder.strongRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 2,
         "Memory scan reports both strong and unowned — cannot distinguish them")
     }
@@ -1442,7 +1431,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let holder = PureSwiftWithMixedRefs(target: target)
       holder.strongRef = PureSwiftTarget()
       holder.weakRef = target
-      let refs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(holder, nil, .heuristicMemoryScan)
       // strong (1) + unowned (1) = 2, weak skipped
       XCTAssertEqual(refs.count, 2,
         "Memory scan finds strong + unowned but skips weak")
@@ -1453,7 +1442,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testMemoryScan_selfReferencingObject() {
       let obj = PureSwiftSelfRef()
       obj.selfRef = obj
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Self-reference should be detected")
     }
 
@@ -1477,7 +1466,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     func testMemoryScan_pureSwiftReferencingObjC() {
       let obj = PureSwiftWithObjCRef()
       obj.objcRef = NSObject()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refs.count, 1, "Pure Swift holding ObjC object should be detected")
     }
 
@@ -1489,7 +1478,7 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       obj.smallNumber = NSNumber(value: 42)
       obj.shortString = "hi" as NSString
       obj.strongRef = PureSwiftTarget()
-      let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refs = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       // Only the strongRef should be found — tagged pointers are skipped
       XCTAssertGreaterThanOrEqual(refs.count, 1,
         "At least the strong ref should be detected")
@@ -1502,11 +1491,11 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
       let obj = PureSwift()
       let target = PureSwiftTarget()
       obj.someObject = target
-      let refsWithValue = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refsWithValue = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refsWithValue.count, 1, "Should find ref when set")
 
       obj.someObject = nil
-      let refsAfterNil = FBGetObjectStrongReferences(obj, nil, true, false, true)
+      let refsAfterNil = FBGetObjectStrongReferences(obj, nil, .heuristicMemoryScan)
       XCTAssertEqual(refsAfterNil.count, 0, "Should find nothing after nilling")
     }
 

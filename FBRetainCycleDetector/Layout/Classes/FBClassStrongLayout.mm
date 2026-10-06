@@ -230,12 +230,16 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForSwiftClass(id obj
     return [result copy];
 }
 
-static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, BOOL shouldIncludeSwiftObjects, BOOL shouldUseSwiftABITraversal, BOOL shouldScanSwiftObjectMemory) {
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Class aCls, FBSwiftReferenceDiscoveryMode swiftReferenceDiscoveryMode) {
     if (aCls == nil) {
         return @[];
     }
-    if (shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(aCls)) {
-        if (shouldUseSwiftABITraversal) {
+    if (!FBIsSwiftObjectOrClass(aCls)) {
+        return FBGetStrongReferencesForObjectiveCClass(aCls);
+    }
+
+    switch (swiftReferenceDiscoveryMode) {
+    case FBSwiftReferenceDiscoveryModeABIMetadata: {
             FBSwiftABIFieldInfo fields[FB_SWIFT_ABI_MAX_FIELDS];
             int count = FBGetSwiftABIFields((__bridge const void *)aCls, fields, FB_SWIFT_ABI_MAX_FIELDS);
             NSMutableArray<id<FBObjectReference>> *result = [NSMutableArray new];
@@ -277,7 +281,7 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
             }
             return [result copy];
         }
-        if (shouldScanSwiftObjectMemory) {
+        case FBSwiftReferenceDiscoveryModeHeuristicMemoryScan: {
             // Heuristic memory scanning: scan the object's memory for
             // pointer-sized values that look like valid heap objects.
             // Finds strong refs, skips weak refs (bit 0 set), but cannot
@@ -356,16 +360,16 @@ static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(id obj, Cla
             }
             return [result copy];
         }
+    case FBSwiftReferenceDiscoveryModeRuntimeIntrospection:
         return FBGetStrongReferencesForSwiftClass(obj, aCls);
+    case FBSwiftReferenceDiscoveryModeDisabled:
+        return FBGetStrongReferencesForObjectiveCClass(aCls);
     }
-    return FBGetStrongReferencesForObjectiveCClass(aCls);
 }
 
 NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
                                                             NSMutableDictionary<NSString*, NSArray<id<FBObjectReference>> *> *layoutCache,
-                                                            BOOL shouldIncludeSwiftObjects,
-                                                            BOOL shouldUseSwiftABITraversal,
-                                                            BOOL shouldScanSwiftObjectMemory) {
+                                                            FBSwiftReferenceDiscoveryMode swiftReferenceDiscoveryMode) {
   NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
 
   __unsafe_unretained Class previousClass = nil;
@@ -378,13 +382,15 @@ NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
     NSString *claseName = [[NSString alloc] initWithCString:className encoding:NSUTF8StringEncoding];
 
     // Skip cache for ABI-traversed Swift classes — closure captures are instance-specific
-    BOOL skipCache = (shouldUseSwiftABITraversal || shouldScanSwiftObjectMemory) && shouldIncludeSwiftObjects && FBIsSwiftObjectOrClass(currentClass);
+    BOOL skipCache = (swiftReferenceDiscoveryMode == FBSwiftReferenceDiscoveryModeABIMetadata
+                      || swiftReferenceDiscoveryMode == FBSwiftReferenceDiscoveryModeHeuristicMemoryScan)
+        && FBIsSwiftObjectOrClass(currentClass);
     if (!skipCache) {
       ivars = layoutCache[claseName];
     }
 
     if (!ivars) {
-      ivars = FBGetStrongReferencesForClass(obj, currentClass, shouldIncludeSwiftObjects, shouldUseSwiftABITraversal, shouldScanSwiftObjectMemory);
+      ivars = FBGetStrongReferencesForClass(obj, currentClass, swiftReferenceDiscoveryMode);
       if (!skipCache && layoutCache && currentClass) {
         layoutCache[claseName] = ivars;
       }
