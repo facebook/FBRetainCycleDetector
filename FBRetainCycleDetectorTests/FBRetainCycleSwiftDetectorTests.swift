@@ -56,6 +56,13 @@ class PureSwiftWithMultipleStrong {
   var strong3: PureSwiftTarget?
 }
 
+// Keeps the baseline strong-reference storage deterministic while allowing tests
+// to model unrelated value bits that happen to look like an object pointer.
+final class PureSwiftWithStrongAndPointerBits {
+  var strongRef: PureSwiftTarget?
+  var pointerBits: UInt = 0
+}
+
 class PureSwiftWithClosure {
   var closure: (() -> Void)?
 }
@@ -1137,9 +1144,11 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
 
     // MARK: - Heuristic Memory Scan Tests
 
+    // Exact-count tests use typed storage because unused words in an `Any?`
+    // existential buffer can contain optimizer-dependent stale pointers.
     func testMemoryScan_singleStrongRef_returnsOne() {
-      let obj = PureSwift()
-      obj.someObject = PureSwiftTarget()
+      let obj = PureSwiftWithStrongAndPointerBits()
+      obj.strongRef = PureSwiftTarget()
       let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
       XCTAssertEqual(refs.count, 1, "Memory scan should find the single strong reference")
     }
@@ -1206,14 +1215,48 @@ func testThatDetectorWillFindCycleCreatedByOneObjectWithItself() {
     }
 
     func testMemoryScan_referenceNames_containOffset() {
-      let obj = PureSwift()
-      obj.someObject = PureSwiftTarget()
+      let obj = PureSwiftWithStrongAndPointerBits()
+      obj.strongRef = PureSwiftTarget()
       let refs = FBGetObjectStrongReferences(obj, nil, true, false, true)
       XCTAssertEqual(refs.count, 1)
       let ref = refs[0] as AnyObject
       let namePath = ref.perform(NSSelectorFromString("namePath"))?.takeUnretainedValue() as? [String]
       XCTAssertTrue(namePath?[0].hasPrefix("scan[+") == true,
         "Memory scan references should be named scan[+offset]")
+    }
+
+    func testMemoryScan_pointerShapedValue_reportedAsKnownFalsePositive() {
+      // The heuristic scans every pointer-sized word without field type or
+      // ownership metadata. Encoding a live object's address in a UInt models
+      // stale existential storage deterministically: it looks like an object
+      // reference even though the holder does not retain it.
+      let strongTarget = PureSwiftTarget()
+      let nonRetainedTarget = PureSwiftTarget()
+      let holder = PureSwiftWithStrongAndPointerBits()
+      holder.strongRef = strongTarget
+      holder.pointerBits = UInt(bitPattern: Unmanaged.passUnretained(nonRetainedTarget).toOpaque())
+
+      // Keep the decoy allocation live so this test isolates ownership
+      // classification rather than depending on allocator reuse.
+      withExtendedLifetime(nonRetainedTarget) {
+        let heuristicRefs = FBGetObjectStrongReferences(holder, nil, true, false, true)
+        let referencedObjects = heuristicRefs.compactMap { ref -> AnyObject? in
+          (ref as AnyObject)
+            .perform(NSSelectorFromString("objectReferenceFromObject:"), with: holder)?
+            .takeUnretainedValue()
+        }
+
+        XCTAssertEqual(heuristicRefs.count, 2,
+          "Memory scan reports pointer-shaped value storage as a known false positive")
+        XCTAssertTrue(referencedObjects.contains { $0 === nonRetainedTarget },
+          "Memory scan should expose the non-retained object encoded in the integer field")
+
+        // ABI traversal knows that pointerBits is a UInt and therefore provides
+        // the behavior a future product-code fix should preserve.
+        let abiRefs = FBGetObjectStrongReferences(holder, nil, true, true, false)
+        XCTAssertEqual(abiRefs.count, 1,
+          "ABI traversal should report only the actual strong reference")
+      }
     }
 
     func testMemoryScan_mixedValueAndRefInStruct() {
