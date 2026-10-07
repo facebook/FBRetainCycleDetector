@@ -10,8 +10,6 @@
 
 #import <objc/runtime.h>
 
-#import <UIKit/UIKit.h>
-
 #import "FBObjectiveCGraphElement.h"
 #import "FBRetainCycleDetector.h"
 
@@ -63,25 +61,40 @@ FBGraphEdgeFilterBlock FBFilterBlockWithObjectIvarObjectRelation(Class fromClass
 
 NSArray<FBGraphEdgeFilterBlock> *FBGetStandardGraphEdgeFilters() {
 #if _INTERNAL_RCD_ENABLED
-  static Class heldActionClass;
-  static Class transitionContextClass;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    heldActionClass = NSClassFromString(@"UIHeldAction");
-    transitionContextClass = NSClassFromString(@"_UIViewControllerOneToOneTransitionContext");
-  });
+  NSMutableArray<FBGraphEdgeFilterBlock> *filters = [NSMutableArray new];
 
-  return @[FBFilterBlockWithObjectIvarRelation([UIView class], @"_subviewCache"),
-           FBFilterBlockWithObjectIvarRelation(heldActionClass, @"m_target"),
-           FBFilterBlockWithObjectToManyIvarsRelation([UITouch class],
-                                                      [NSSet setWithArray:@[@"_view",
-                                                                            @"_gestureRecognizers",
-                                                                            @"_window",
-                                                                            @"_warpedIntoView"]]),
-           FBFilterBlockWithObjectToManyIvarsRelation(transitionContextClass,
-                                                      [NSSet setWithArray:@[@"_toViewController",
-                                                                            @"_fromViewController"]]),
-           FBFilterBlockWithObjectIvarRelation([UIGestureRecognizer class], @"_gestureEnvironment")];
+  Class viewClass = NSClassFromString(@"UIView");
+  if (viewClass) {
+    [filters addObject:FBFilterBlockWithObjectIvarRelation(viewClass, @"_subviewCache")];
+  }
+
+  Class heldActionClass = NSClassFromString(@"UIHeldAction");
+  if (heldActionClass) {
+    [filters addObject:FBFilterBlockWithObjectIvarRelation(heldActionClass, @"m_target")];
+  }
+
+  Class touchClass = NSClassFromString(@"UITouch");
+  if (touchClass) {
+    [filters addObject:FBFilterBlockWithObjectToManyIvarsRelation(touchClass,
+                                                                 [NSSet setWithArray:@[@"_view",
+                                                                                       @"_gestureRecognizers",
+                                                                                       @"_window",
+                                                                                       @"_warpedIntoView"]])];
+  }
+
+  Class transitionContextClass = NSClassFromString(@"_UIViewControllerOneToOneTransitionContext");
+  if (transitionContextClass) {
+    [filters addObject:FBFilterBlockWithObjectToManyIvarsRelation(transitionContextClass,
+                                                                 [NSSet setWithArray:@[@"_toViewController",
+                                                                                       @"_fromViewController"]])];
+  }
+
+  Class gestureRecognizerClass = NSClassFromString(@"UIGestureRecognizer");
+  if (gestureRecognizerClass) {
+    [filters addObject:FBFilterBlockWithObjectIvarRelation(gestureRecognizerClass, @"_gestureEnvironment")];
+  }
+
+  return filters;
 #else
   return nil;
 #endif // _INTERNAL_RCD_ENABLED

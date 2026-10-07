@@ -14,8 +14,6 @@
 #import <objc/runtime.h>
 #import <vector>
 
-#import <UIKit/UIKit.h>
-
 #import <FBRetainCycleDetector/FBRetainCycleDetector-Swift.h>
 
 #import "FBIvarReference.h"
