@@ -47,7 +47,7 @@ static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar,
   ptrdiff_t offset = ivar.offset;
 
   for (auto &type: types) {
-    NSUInteger size, align;
+    NSUInteger size = 0, align = 0;
 
     std::string typeEncoding = type->typeEncoding;
     if (typeEncoding[0] == '^') {
@@ -56,9 +56,19 @@ static NSArray *FBGetReferencesForObjectsInStructEncoding(FBIvarReference *ivar,
       align = _Alignof(void *);
     } else {
       @try {
-        NSGetSizeAndAlignment(typeEncoding.c_str(),
-                              &size,
-                              &align);
+        if (!NSGetSizeAndAlignment(typeEncoding.c_str(),
+                                   &size,
+                                   &align)) {
+          /**
+           NSGetSizeAndAlignment cannot compute the size and alignment of every
+           encoding (e.g. bitfields or C++ types) and it does not throw when it
+           fails - it just returns NO. Without checking the return value we
+           would compute offsets from garbage (or zero) size/alignment, which
+           misplaces every subsequent reference inside the struct and can even
+           crash. Bail out of the scan instead.
+           */
+          break;
+        }
       } @catch (NSException *e) {
         /**
          If we failed, we probably have C++ and ObjC cannot get it's size and alignment. We are skipping.
