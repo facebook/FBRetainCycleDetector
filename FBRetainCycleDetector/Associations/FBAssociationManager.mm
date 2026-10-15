@@ -14,6 +14,7 @@
 #import <map>
 #import <mutex>
 #import <objc/runtime.h>
+#import <pthread.h>
 #import <unordered_map>
 #import <unordered_set>
 #import <vector>
@@ -28,30 +29,43 @@ namespace FB { namespace AssociationManager {
   using ObjectAssociationSet = std::unordered_set<void *>;
   using AssociationMap = std::unordered_map<id, ObjectAssociationSet *>;
 
-  static auto _associationMap = new AssociationMap();
-  static auto _associationMutex = new std::mutex;
+  struct State {
+    AssociationMap associationMap;
+    std::mutex associationMutex;
+    std::mutex hookMutex;
+  };
 
-  static std::mutex *hookMutex(new std::mutex);
+  static State &sharedState() {
+    static State *state;
+    static pthread_once_t once = PTHREAD_ONCE_INIT;
+    pthread_once(&once, [] {
+      state = new State;
+    });
+    return *state;
+  }
+
   static bool hookTaken = false;
 
   void _threadUnsafeResetAssociationAtKey(id object, void *key) {
-    auto i = _associationMap->find(object);
+    auto &state = sharedState();
+    auto i = state.associationMap.find(object);
 
-    if (i == _associationMap->end()) {
+    if (i == state.associationMap.end()) {
       return;
     }
     i->second->erase(key);
   }
 
   void _threadUnsafeSetStrongAssociation(id object, void *key, id value) {
+    auto &state = sharedState();
     if (value) {
-      auto i = _associationMap->find(object);
+      auto i = state.associationMap.find(object);
       ObjectAssociationSet *refs;
-      if (i != _associationMap->end()) {
+      if (i != state.associationMap.end()) {
         refs = i->second;
       } else {
         refs = new ObjectAssociationSet;
-        (*_associationMap)[object] = refs;
+        state.associationMap[object] = refs;
       }
       refs->insert(key);
     } else {
@@ -60,28 +74,30 @@ namespace FB { namespace AssociationManager {
   }
 
   void _threadUnsafeRemoveAssociations(id object) {
-    if (_associationMap->size() == 0 ){
+    auto &state = sharedState();
+    if (state.associationMap.size() == 0 ){
       return;
     }
 
-    auto i = _associationMap->find(object);
-    if (i == _associationMap->end()) {
+    auto i = state.associationMap.find(object);
+    if (i == state.associationMap.end()) {
       return;
     }
 
     auto *refs = i->second;
     delete refs;
-    _associationMap->erase(i);
+    state.associationMap.erase(i);
   }
 
   NSArray *associations(id object) {
-    std::lock_guard<std::mutex> l(*_associationMutex);
-    if (_associationMap->size() == 0 ){
+    auto &state = sharedState();
+    std::lock_guard<std::mutex> l(state.associationMutex);
+    if (state.associationMap.size() == 0 ){
       return nil;
     }
 
-    auto i = _associationMap->find(object);
-    if (i == _associationMap->end()) {
+    auto i = state.associationMap.find(object);
+    if (i == state.associationMap.end()) {
       return nil;
     }
 
@@ -103,7 +119,7 @@ namespace FB { namespace AssociationManager {
 
   static void fb_objc_setAssociatedObject(id object, void *key, id value, objc_AssociationPolicy policy) {
     {
-      std::lock_guard<std::mutex> l(*_associationMutex);
+      std::lock_guard<std::mutex> l(sharedState().associationMutex);
       // Track strong references only
       if (policy == OBJC_ASSOCIATION_RETAIN ||
           policy == OBJC_ASSOCIATION_RETAIN_NONATOMIC) {
@@ -132,7 +148,7 @@ namespace FB { namespace AssociationManager {
 
   static void fb_objc_removeAssociatedObjects(id object) {
     {
-      std::lock_guard<std::mutex> l(*_associationMutex);
+      std::lock_guard<std::mutex> l(sharedState().associationMutex);
       _threadUnsafeRemoveAssociations(object);
     }
 
@@ -140,8 +156,9 @@ namespace FB { namespace AssociationManager {
   }
 
   static void cleanUp() {
-    std::lock_guard<std::mutex> l(*_associationMutex);
-    _associationMap->clear();
+    auto &state = sharedState();
+    std::lock_guard<std::mutex> l(state.associationMutex);
+    state.associationMap.clear();
   }
 
 } }
@@ -153,7 +170,7 @@ namespace FB { namespace AssociationManager {
 + (void)hook
 {
 #if _INTERNAL_RCD_ENABLED
-  std::lock_guard<std::mutex> l(*FB::AssociationManager::hookMutex);
+  std::lock_guard<std::mutex> l(FB::AssociationManager::sharedState().hookMutex);
   rcd_rebind_symbols((struct rcd_rebinding[2]){
     {
       "objc_setAssociatedObject",
@@ -172,7 +189,7 @@ namespace FB { namespace AssociationManager {
 + (void)unhook
 {
 #if _INTERNAL_RCD_ENABLED
-  std::lock_guard<std::mutex> l(*FB::AssociationManager::hookMutex);
+  std::lock_guard<std::mutex> l(FB::AssociationManager::sharedState().hookMutex);
   if (FB::AssociationManager::hookTaken) {
     rcd_rebind_symbols((struct rcd_rebinding[2]){
       {
