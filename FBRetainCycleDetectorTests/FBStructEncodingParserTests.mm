@@ -50,6 +50,22 @@ struct _RCDTestStructWithUnnamedStruct {
   };
 };
 
+struct _RCDTestStructWithNamedUnionAndObject {
+  union {
+    int intMember;
+    float floatMember;
+  } someUnion;
+  NSObject *object;
+};
+
+struct _RCDTestStructWithAnonymousUnionAndObject {
+  union {
+    int intMember;
+    float floatMember;
+  };
+  NSObject *object;
+};
+
 @interface _RCDParserTestClass : NSObject
 @property (nonatomic, assign) _RCDTestStructWithPrimitive structWithPrimitive;
 @property (nonatomic, assign) _RCDTestStructWithObject structWithObject;
@@ -57,6 +73,8 @@ struct _RCDTestStructWithUnnamedStruct {
 @property (nonatomic, assign) _RCDTestStructWithNestedStruct structWithNestedStruct;
 @property (nonatomic, assign) _RCDTestStructWithUnnamedBitfield structWithUnnamedBitfield;
 @property (nonatomic, assign) _RCDTestStructWithUnnamedStruct structWithUnnamedStruct;
+@property (nonatomic, assign) _RCDTestStructWithNamedUnionAndObject structWithNamedUnionAndObject;
+@property (nonatomic, assign) _RCDTestStructWithAnonymousUnionAndObject structWithAnonymousUnionAndObject;
 @end
 @implementation _RCDParserTestClass
 @end
@@ -207,6 +225,56 @@ struct _RCDTestStructWithUnnamedStruct {
   XCTAssertEqual(innerStruct->typesContainedInStruct.size(), 1);
   XCTAssertEqual(innerStruct->typesContainedInStruct[0]->name, "value");
   XCTAssertEqual(innerStruct->typesContainedInStruct[0]->typeEncoding, "B");
+}
+
+- (void)testThatParserWillParseUnionAsSingleOpaqueType
+{
+  // Unions are encoded by the runtime as "(name=...)" (or "(?=...)" when the
+  // union is anonymous). They must be consumed as one opaque type instead of
+  // being split into malformed members at the first quoted member name.
+  std::string encoding = "{_RCDTestStructWithUnion=\"a\"i\"u\"(?=\"x\"i\"y\"f)\"obj\"@}";
+  auto parsedStruct = FB::RetainCycleDetector::Parser::parseStructEncoding(encoding);
+
+  XCTAssertEqual(parsedStruct.typesContainedInStruct.size(), 3);
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->typeEncoding, "i");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->name, "a");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->typeEncoding, "(?=\"x\"i\"y\"f)");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->name, "u");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[2]->typeEncoding, "@");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[2]->name, "obj");
+}
+
+- (void)testThatParserWillParseStructWithNamedUnionAndObject
+{
+  std::string encoding = [self _getIvarEncodingByName:@"_structWithNamedUnionAndObject"
+                                             forClass:[_RCDParserTestClass class]];
+  XCTAssertTrue(encoding.length() > 0);
+  FB::RetainCycleDetector::Parser::Struct parsedStruct =
+  FB::RetainCycleDetector::Parser::parseStructEncoding(encoding);
+
+  XCTAssertEqual(parsedStruct.typesContainedInStruct.size(), 2);
+  XCTAssertEqual(parsedStruct.structTypeName, "_RCDTestStructWithNamedUnionAndObject");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->name, "someUnion");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->typeEncoding.front(), '(');
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->typeEncoding.back(), ')');
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->name, "object");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->typeEncoding, "@");
+}
+
+- (void)testThatParserWillParseStructWithAnonymousUnionAndObject
+{
+  std::string encoding = [self _getIvarEncodingByName:@"_structWithAnonymousUnionAndObject"
+                                             forClass:[_RCDParserTestClass class]];
+  XCTAssertTrue(encoding.length() > 0);
+  FB::RetainCycleDetector::Parser::Struct parsedStruct =
+  FB::RetainCycleDetector::Parser::parseStructEncoding(encoding);
+
+  XCTAssertEqual(parsedStruct.typesContainedInStruct.size(), 2);
+  XCTAssertEqual(parsedStruct.structTypeName, "_RCDTestStructWithAnonymousUnionAndObject");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->typeEncoding.front(), '(');
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[0]->typeEncoding.back(), ')');
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->name, "object");
+  XCTAssertEqual(parsedStruct.typesContainedInStruct[1]->typeEncoding, "@");
 }
 
 @end
