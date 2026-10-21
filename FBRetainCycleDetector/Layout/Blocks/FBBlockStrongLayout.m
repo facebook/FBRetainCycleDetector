@@ -334,6 +334,9 @@ static Class _BlockClass(void) {
 }
 
 BOOL FBObjectIsBlock(void *object) {
+  if (!_FBIsRetainableObjCPointer(object)) {
+    return NO;
+  }
   Class blockClass = _BlockClass();
 
   Class candidate = object_getClass((__bridge id)object);
